@@ -27,13 +27,24 @@ const activities = [
     gradient: 'from-pink-400 to-rose-400',
   },
   {
-    id: 'skincare',
-    name: 'Skincare',
-    description: 'Tu rutina de skincare de hoy',
-    emoji: '🧴',
-    color: '#a78bfa',       // violet-400
+    id: 'skincare-morning',
+    name: 'Skincare Matutina',
+    description: 'Rutina de día (antes de las 12 PM)',
+    emoji: '☀️',
+    color: '#a78bfa',
     colorLight: '#a78bfa20',
     gradient: 'from-violet-400 to-purple-400',
+    deadline: { hour: 12, minute: 0 } // 12:00 PM Ecuador time
+  },
+  {
+    id: 'skincare-night',
+    name: 'Skincare Nocturna',
+    description: 'Rutina de noche (antes de las 11 PM)',
+    emoji: '🌙',
+    color: '#818cf8',
+    colorLight: '#818cf820',
+    gradient: 'from-indigo-400 to-blue-400',
+    deadline: { hour: 23, minute: 0 } // 11:00 PM Ecuador time
   },
 ];
 

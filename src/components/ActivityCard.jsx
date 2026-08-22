@@ -90,18 +90,46 @@ export default function ActivityCard({
             </span>
           </div>
         ) : (
-          <motion.button
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${activity.color}, ${activity.color}bb)`,
-              boxShadow: `0 4px 15px ${activity.color}30`,
-            }}
-            onClick={() => onClaim(activity)}
-            whileHover={{ scale: 1.02, boxShadow: `0 6px 25px ${activity.color}50` }}
-            whileTap={{ scale: 0.97 }}
-          >
-            📸 Subir evidencia
-          </motion.button>
+          (() => {
+            // Verificar si expiró la actividad según hora de Ecuador
+            let isExpired = false;
+            if (activity.deadline) {
+              const now = new Date();
+              const options = { timeZone: 'America/Guayaquil', hour12: false, hour: 'numeric', minute: 'numeric' };
+              const timeString = now.toLocaleTimeString('en-US', options);
+              if (timeString !== 'Invalid Date') {
+                const [currentHour, currentMinute] = timeString.split(':').map(Number);
+                if (currentHour > activity.deadline.hour || (currentHour === activity.deadline.hour && currentMinute >= activity.deadline.minute)) {
+                  isExpired = true;
+                }
+              }
+            }
+
+            if (isExpired) {
+              return (
+                <div className="text-center py-2.5 rounded-xl border border-red-500/30 bg-red-500/10">
+                  <span className="text-red-400 text-xs font-medium">
+                    ⏳ Se acabó el tiempo
+                  </span>
+                </div>
+              );
+            }
+
+            return (
+              <motion.button
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${activity.color}, ${activity.color}bb)`,
+                  boxShadow: `0 4px 15px ${activity.color}30`,
+                }}
+                onClick={() => onClaim(activity)}
+                whileHover={{ scale: 1.02, boxShadow: `0 6px 25px ${activity.color}50` }}
+                whileTap={{ scale: 0.97 }}
+              >
+                📸 Subir evidencia
+              </motion.button>
+            );
+          })()
         )}
       </div>
     </motion.div>

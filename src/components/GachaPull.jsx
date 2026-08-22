@@ -207,15 +207,18 @@ export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPu
                 'Z',
               ].join(' ');
 
-              // Posición del emoji (punto medio del segmento)
-              const midAngle = ((i + 0.5) * segmentAngle - 90) * (Math.PI / 180);
-              const emojiRadius = 95;
-              const emojiX = 150 + emojiRadius * Math.cos(midAngle);
-              const emojiY = 150 + emojiRadius * Math.sin(midAngle);
-
               const colors = SEGMENT_COLORS[segment.rarity];
               const bgColor = i % 2 === 0 ? colors[0] : colors[1];
               const borderColor = SEGMENT_BORDER_COLORS[segment.rarity];
+
+              // Rotación del texto para que apunte hacia afuera y no quede al revés
+              const midAngleDeg = (i + 0.5) * segmentAngle - 90;
+              const isLeft = (midAngleDeg % 360) > 90 && (midAngleDeg % 360) < 270;
+              
+              // Texto truncado para que quepa en el segmento
+              const displayName = segment.name.length > 22 
+                ? segment.name.substring(0, 20) + '...' 
+                : segment.name;
 
               return (
                 <g key={`${segment.id}-${i}`}>
@@ -226,17 +229,30 @@ export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPu
                     stroke={borderColor}
                     strokeWidth="0.5"
                   />
-                  {/* Emoji */}
-                  <text
-                    x={emojiX}
-                    y={emojiY}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize="22"
-                    className="select-none"
-                  >
-                    {segment.emoji}
-                  </text>
+                  {/* Emoji y Texto */}
+                  <g transform={`translate(150, 150) rotate(${midAngleDeg}) translate(90, 0) ${isLeft ? 'rotate(180)' : ''}`}>
+                    <text
+                      x="0"
+                      y="-6"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize="18"
+                      className="select-none"
+                    >
+                      {segment.emoji}
+                    </text>
+                    <text
+                      x="0"
+                      y="10"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize="7"
+                      fill="rgba(255,255,255,0.9)"
+                      className="select-none font-medium"
+                    >
+                      {displayName}
+                    </text>
+                  </g>
                 </g>
               );
             })}

@@ -15,15 +15,15 @@ export const prizes = {
     },
     {
       id: 'c2',
-      name: '5 fotos suyas',
-      description: 'De lo que sea',
-      emoji: '📸',
-    },
-    {
-      id: 'c3',
       name: 'Jugar algo que yo quiera',
       description: 'Jugamos a lo que yo decida',
       emoji: '🎮',
+    },
+    {
+      id: 'c3',
+      name: 'No ganaste nada',
+      description: 'Suerte para la próxima',
+      emoji: '😢',
     },
     {
       id: 'c4',
@@ -33,12 +33,6 @@ export const prizes = {
     },
     {
       id: 'c5',
-      name: 'No ganaste nada',
-      description: 'Suerte para la próxima',
-      emoji: '😢',
-    },
-    {
-      id: 'c6',
       name: 'No ganaste nada',
       description: 'Suerte para la próxima',
       emoji: '😢',
@@ -61,7 +55,7 @@ export const prizes = {
     {
       id: 'r3',
       name: 'Fotos exclusivas',
-      description: 'Su vrg, su carita, su abdomen, lo que sea',
+      description: 'Lo que quieras',
       emoji: '🔥',
     },
   ],
