@@ -1,0 +1,283 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================================
+   GACHA CÓSMICO — Global Styles
+   Tema cósmico/espacial con nebulosas, estrellas y efectos glow.
+   ================================================================ */
+
+/* --- Base Reset & Typography --- */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background: #0a0a1a;
+    color: #f0f0ff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar — cosmic theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a1a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7, #ec4899);
+    border-radius: 3px;
+  }
+}
+
+/* --- Cosmic Background --- */
+@layer components {
+  .bg-cosmic {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 40%, #0f0f2e 70%, #0a0a1a 100%);
+    position: relative;
+  }
+
+  .bg-cosmic::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(96, 165, 250, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* --- Glassmorphism Card --- */
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-hover:hover {
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* --- Rarity Glow Effects --- */
+  .glow-common {
+    box-shadow: 0 0 15px rgba(96, 165, 250, 0.3), 0 0 30px rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.4);
+  }
+
+  .glow-rare {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.5);
+  }
+
+  .glow-legendary {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), 0 0 60px rgba(251, 191, 36, 0.2), 0 0 100px rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.6);
+  }
+
+  /* --- Pull Button --- */
+  .btn-pull {
+    position: relative;
+    padding: 1rem 2.5rem;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ec4899, #a855f7, #60a5fa);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .btn-pull::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #ec4899, #a855f7, #60a5fa);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    z-index: -1;
+    filter: blur(12px);
+    opacity: 0.6;
+  }
+
+  .btn-pull:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+  }
+
+  .btn-pull:active {
+    transform: scale(0.98);
+  }
+
+  .btn-pull:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* --- Shimmer Text --- */
+  .text-shimmer {
+    background: linear-gradient(
+      90deg,
+      #f0f0ff 0%,
+      #a855f7 25%,
+      #fbbf24 50%,
+      #a855f7 75%,
+      #f0f0ff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+
+}
+
+
+/* --- Keyframe Animations --- */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes screen-flash {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ================================================================
+   ORB ANIMATIONS — GPU-accelerated (transform + opacity only)
+   Moved from JS setState to CSS for zero React re-renders.
+   ================================================================ */
+
+/* Orbe en estado idle — gradiente púrpura suave */
+.orb-idle {
+  background: radial-gradient(circle at 35% 35%,
+    rgba(168, 85, 247, 0.5),
+    rgba(168, 85, 247, 0.25) 50%,
+    rgba(168, 85, 247, 0.08) 70%,
+    transparent
+  );
+  border: 2px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
+}
+
+/* Orbe durante pulling — ciclo de colores via CSS */
+.orb-cycling {
+  background: radial-gradient(circle at 35% 35%,
+    rgba(168, 85, 247, 0.6),
+    rgba(236, 72, 153, 0.3) 50%,
+    rgba(96, 165, 250, 0.1) 70%,
+    transparent
+  );
+  border: 2px solid rgba(168, 85, 247, 0.5);
+  animation: orb-color-cycle 0.8s ease-in-out infinite;
+  will-change: filter;
+}
+
+@keyframes orb-color-cycle {
+  0%   {
+    filter: drop-shadow(0 0 15px rgba(96, 165, 250, 0.6))
+            hue-rotate(0deg);
+  }
+  33%  {
+    filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.7))
+            hue-rotate(60deg);
+  }
+  66%  {
+    filter: drop-shadow(0 0 35px rgba(236, 72, 153, 0.7))
+            hue-rotate(120deg);
+  }
+  100% {
+    filter: drop-shadow(0 0 45px rgba(251, 191, 36, 0.8))
+            hue-rotate(180deg);
+  }
+}
+
+/* Anillo cónico del orbe */
+.orb-ring {
+  background: conic-gradient(from 0deg,
+    #ec4899, transparent, #a855f7, transparent, #60a5fa
+  );
+  mask: radial-gradient(circle, transparent 60%, black 62%);
+  -webkit-mask: radial-gradient(circle, transparent 60%, black 62%);
+}
+
+.orb-ring-spinning {
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Shake del orbe — CSS puro, sin setInterval */
+.orb-shake {
+  animation: orb-shake-anim 0.1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes orb-shake-anim {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-2px, 1px); }
+  50%  { transform: translate(2px, -1px); }
+  75%  { transform: translate(-1px, -2px); }
+  100% { transform: translate(1px, 2px); }
+}
+
+/* --- Particle Burst (for legendary reveals) --- */
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* --- Screen flash overlay --- */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  animation: screen-flash 0.6s ease-out forwards;
+}
+
