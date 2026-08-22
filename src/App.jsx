@@ -5,7 +5,7 @@
  * Layout de scroll vertical en una sola vista.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 
 // Components
@@ -21,7 +21,35 @@ import { useGacha } from './hooks/useGacha';
 import { useInventory } from './hooks/useInventory';
 import { useTickets } from './hooks/useTickets';
 
+// Services
+import storageService from './services/storageService';
+
 export default function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    storageService.init().then(() => {
+      setIsReady(true);
+    });
+  }, []);
+
+  if (!isReady) {
+    return (
+      <div className="bg-cosmic min-h-screen flex items-center justify-center flex-col relative">
+        <StarField count={80} />
+        <span className="text-5xl animate-bounce mb-6">🚀</span>
+        <h2 className="text-white font-display text-2xl font-bold animate-pulse">
+          Conectando con el universo...
+        </h2>
+        <p className="text-slate-400 mt-2 text-sm">Sincronizando base de datos global</p>
+      </div>
+    );
+  }
+
+  return <AppContent />;
+}
+
+function AppContent() {
   const {
     isPulling,
     isRevealing,
@@ -46,48 +74,31 @@ export default function App() {
     hasTickets,
   } = useTickets();
 
-  /**
-   * Ejecuta una tirada: gasta 1 ticket → pull → agrega al inventario.
-   */
   const handlePull = useCallback(() => {
-    // Gastar ticket primero
     const spent = spendTicket();
     if (!spent) return;
 
-    // Ejecutar tirada
     pull((pullResult) => {
       addPrize(pullResult);
     });
   }, [spendTicket, pull, addPrize]);
 
-  /**
-   * Cierra el reveal y vuelve al estado idle.
-   */
   const handleCloseReveal = useCallback(() => {
     reset();
   }, [reset]);
 
   return (
     <div className="bg-cosmic min-h-screen relative">
-      {/* Fondo de estrellas */}
       <StarField count={80} />
-
-      {/* Header con título y contador de tickets */}
       <Header tickets={tickets} />
-
-      {/* Sección de actividades del día */}
       <Activities
         canClaim={canClaim}
         getEvidence={getEvidence}
         onClaimTicket={claimTicket}
       />
-
-      {/* Divisor visual */}
       <div className="max-w-3xl mx-auto px-4 mb-4">
         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
-
-      {/* Zona principal del gacha */}
       <GachaPull
         isPulling={isPulling}
         isIdle={isIdle}
@@ -96,27 +107,15 @@ export default function App() {
         onPull={handlePull}
         hasTickets={hasTickets}
       />
-
-      {/* Modal de revelación del premio */}
       <AnimatePresence>
         {isRevealing && result && (
-          <PrizeReveal
-            result={result}
-            onClose={handleCloseReveal}
-          />
+          <PrizeReveal result={result} onClose={handleCloseReveal} />
         )}
       </AnimatePresence>
-
-      {/* Divisor visual */}
       <div className="max-w-3xl mx-auto px-4 mb-4">
         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
-
-      {/* Inventario de premios obtenidos */}
-      <Inventory
-        inventory={inventory}
-        stats={stats}
-      />
+      <Inventory inventory={inventory} stats={stats} />
     </div>
   );
 }

@@ -1,12 +1,8 @@
 /**
- * storageService.js — Abstracción de persistencia.
+ * storageService.js — Abstracción de persistencia con soporte Vercel KV.
  *
- * Actualmente usa LocalStorage, pero la interfaz está diseñada
- * para ser reemplazada fácilmente por una API REST / base de datos
- * sin modificar los hooks que la consumen.
- *
- * Para migrar a una DB, solo necesitas reemplazar las implementaciones
- * internas y convertir los métodos a async.
+ * Mantiene un caché síncrono en memoria para que los hooks funcionen rápido,
+ * y sincroniza de fondo con la base de datos (/api/state) y LocalStorage (fallback).
  */
 
 const KEYS = {
@@ -18,46 +14,116 @@ const KEYS = {
   LAST_RESET_DATE: 'gacha_cosmico_last_reset',
 };
 
+// Caché en memoria (se llena al hacer .init())
+let memoryCache = {
+  [KEYS.INVENTORY]: [],
+  [KEYS.PULL_COUNT]: 0,
+  [KEYS.SETTINGS]: { soundEnabled: true },
+  [KEYS.TICKETS]: 0,
+  [KEYS.ACTIVITY_LOG]: [],
+  [KEYS.LAST_RESET_DATE]: null,
+};
+
+// Bandera para saber si ya cargamos de la DB
+let isInitialized = false;
+
 /**
- * Lee un valor de LocalStorage con manejo seguro de errores.
- * @param {string} key
- * @param {*} fallback
- * @returns {*}
+ * Lee un valor del caché en memoria (y si no existe, de LocalStorage).
  */
 function safeGet(key, fallback) {
+  if (memoryCache[key] !== undefined) {
+    return memoryCache[key];
+  }
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
   } catch (error) {
-    console.warn(`[StorageService] Error reading "${key}":`, error);
     return fallback;
   }
 }
 
 /**
- * Escribe un valor en LocalStorage con manejo seguro de errores.
- * @param {string} key
- * @param {*} value
+ * Actualiza el caché local, LocalStorage y sincroniza con la nube.
  */
 function safeSet(key, value) {
+  // 1. Actualizar caché en memoria
+  memoryCache[key] = value;
+  
+  // 2. Guardar en LocalStorage como respaldo
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.warn(`[StorageService] Error writing "${key}":`, error);
+  } catch (error) {}
+
+  // 3. Sincronizar con la base de datos de forma asíncrona (si está inicializado)
+  if (isInitialized) {
+    syncToCloud();
   }
 }
 
+/**
+ * Envía el estado completo a Vercel KV.
+ * Se hace en background (fire and forget) para no bloquear la UI.
+ */
+let syncTimeout = null;
+function syncToCloud() {
+  // Usamos un debounce para no saturar la API si se hacen muchos cambios rápidos
+  if (syncTimeout) clearTimeout(syncTimeout);
+  
+  syncTimeout = setTimeout(() => {
+    fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(memoryCache)
+    }).catch(err => console.warn('Error sincronizando con la nube:', err));
+  }, 1000);
+}
+
 const storageService = {
+  /**
+   * Inicializa el servicio conectándose a la base de datos de Vercel.
+   * Llama a esta función cuando la App carga.
+   */
+  async init() {
+    try {
+      const response = await fetch('/api/state');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Volcar datos de la nube en nuestro caché local
+          const data = result.data;
+          
+          memoryCache = {
+            [KEYS.INVENTORY]: data[KEYS.INVENTORY] || [],
+            [KEYS.PULL_COUNT]: data[KEYS.PULL_COUNT] || 0,
+            [KEYS.SETTINGS]: data[KEYS.SETTINGS] || { soundEnabled: true },
+            [KEYS.TICKETS]: data[KEYS.TICKETS] || 0,
+            [KEYS.ACTIVITY_LOG]: data[KEYS.ACTIVITY_LOG] || [],
+            [KEYS.LAST_RESET_DATE]: data[KEYS.LAST_RESET_DATE] || null,
+          };
+          
+          // Actualizar LocalStorage con lo que vino de la nube
+          Object.keys(memoryCache).forEach(key => {
+            try { localStorage.setItem(key, JSON.stringify(memoryCache[key])); } catch(e) {}
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar de la nube, usando LocalStorage local.', error);
+      // Fallback: cargar de localStorage al caché de memoria
+      Object.keys(KEYS).forEach(k => {
+        const key = KEYS[k];
+        memoryCache[key] = safeGet(key, memoryCache[key]);
+      });
+    } finally {
+      isInitialized = true;
+    }
+  },
+
   // --- Inventario ---
 
-  getInventory() {
-    return safeGet(KEYS.INVENTORY, []);
-  },
-
-  saveInventory(inventory) {
-    safeSet(KEYS.INVENTORY, inventory);
-  },
-
+  getInventory() { return safeGet(KEYS.INVENTORY, []); },
+  saveInventory(inventory) { safeSet(KEYS.INVENTORY, inventory); },
+  
   addPrize(prize) {
     const inventory = this.getInventory();
     const updated = [prize, ...inventory];
@@ -74,14 +140,8 @@ const storageService = {
 
   // --- Contador de tiradas ---
 
-  getPullCount() {
-    return safeGet(KEYS.PULL_COUNT, 0);
-  },
-
-  savePullCount(count) {
-    safeSet(KEYS.PULL_COUNT, count);
-  },
-
+  getPullCount() { return safeGet(KEYS.PULL_COUNT, 0); },
+  savePullCount(count) { safeSet(KEYS.PULL_COUNT, count); },
   incrementPullCount() {
     const count = this.getPullCount() + 1;
     this.savePullCount(count);
@@ -90,36 +150,13 @@ const storageService = {
 
   // --- Tickets ---
 
-  /**
-   * Obtiene el número actual de tickets disponibles.
-   * @returns {number}
-   */
-  getTickets() {
-    return safeGet(KEYS.TICKETS, 0);
-  },
-
-  /**
-   * Guarda el número de tickets.
-   * @param {number} tickets
-   */
-  saveTickets(tickets) {
-    safeSet(KEYS.TICKETS, Math.max(0, tickets));
-  },
-
-  /**
-   * Incrementa tickets en 1 y retorna el nuevo valor.
-   * @returns {number}
-   */
+  getTickets() { return safeGet(KEYS.TICKETS, 0); },
+  saveTickets(tickets) { safeSet(KEYS.TICKETS, Math.max(0, tickets)); },
   addTicket() {
     const tickets = this.getTickets() + 1;
     this.saveTickets(tickets);
     return tickets;
   },
-
-  /**
-   * Gasta 1 ticket. Retorna false si no hay tickets disponibles.
-   * @returns {boolean} true si se pudo gastar, false si no había tickets
-   */
   spendTicket() {
     const tickets = this.getTickets();
     if (tickets <= 0) return false;
@@ -127,31 +164,10 @@ const storageService = {
     return true;
   },
 
-  // --- Activity Log (registro de actividades completadas hoy) ---
+  // --- Activity Log ---
 
-  /**
-   * Obtiene el registro de actividades completadas.
-   * Cada entrada: { activityId, photoBase64, completedAt }
-   * @returns {Array<object>}
-   */
-  getActivityLog() {
-    return safeGet(KEYS.ACTIVITY_LOG, []);
-  },
-
-  /**
-   * Guarda el registro de actividades.
-   * @param {Array<object>} log
-   */
-  saveActivityLog(log) {
-    safeSet(KEYS.ACTIVITY_LOG, log);
-  },
-
-  /**
-   * Registra una actividad como completada con evidencia.
-   * @param {string} activityId
-   * @param {string} photoBase64 - Foto en base64 comprimida
-   * @returns {Array<object>} Log actualizado
-   */
+  getActivityLog() { return safeGet(KEYS.ACTIVITY_LOG, []); },
+  saveActivityLog(log) { safeSet(KEYS.ACTIVITY_LOG, log); },
   logActivity(activityId, photoBase64) {
     const log = this.getActivityLog();
     const entry = {
@@ -163,12 +179,6 @@ const storageService = {
     this.saveActivityLog(updated);
     return updated;
   },
-
-  /**
-   * Verifica si una actividad ya fue completada hoy.
-   * @param {string} activityId
-   * @returns {boolean}
-   */
   isActivityCompletedToday(activityId) {
     const log = this.getActivityLog();
     return log.some((entry) => entry.activityId === activityId);
@@ -176,28 +186,8 @@ const storageService = {
 
   // --- Reset diario ---
 
-  /**
-   * Obtiene la fecha del último reset (como string de fecha).
-   * @returns {string|null}
-   */
-  getLastResetDate() {
-    return safeGet(KEYS.LAST_RESET_DATE, null);
-  },
-
-  /**
-   * Guarda la fecha del último reset.
-   * @param {string} dateString
-   */
-  saveLastResetDate(dateString) {
-    safeSet(KEYS.LAST_RESET_DATE, dateString);
-  },
-
-  /**
-   * Verifica si es necesario resetear las actividades (nuevo día).
-   * Si es un nuevo día, limpia el activity log y actualiza la fecha.
-   * Los tickets acumulados NO se pierden.
-   * @returns {boolean} true si se hizo reset
-   */
+  getLastResetDate() { return safeGet(KEYS.LAST_RESET_DATE, null); },
+  saveLastResetDate(dateString) { safeSet(KEYS.LAST_RESET_DATE, dateString); },
   checkAndResetDaily() {
     const today = new Date().toDateString();
     const lastReset = this.getLastResetDate();
@@ -212,24 +202,20 @@ const storageService = {
 
   // --- Settings ---
 
-  getSettings() {
-    return safeGet(KEYS.SETTINGS, { soundEnabled: true });
-  },
-
-  saveSettings(settings) {
-    safeSet(KEYS.SETTINGS, settings);
-  },
+  getSettings() { return safeGet(KEYS.SETTINGS, { soundEnabled: true }); },
+  saveSettings(settings) { safeSet(KEYS.SETTINGS, settings); },
 
   // --- Utilidades ---
 
   clearAll() {
-    Object.values(KEYS).forEach((key) => {
-      try {
-        localStorage.removeItem(key);
-      } catch (e) {
-        // silently fail
-      }
+    // Resetear en memoria y local
+    Object.keys(memoryCache).forEach(key => {
+      memoryCache[key] = (key === KEYS.INVENTORY || key === KEYS.ACTIVITY_LOG) ? [] : 
+                         (key === KEYS.TICKETS || key === KEYS.PULL_COUNT) ? 0 : null;
+      try { localStorage.removeItem(key); } catch (e) {}
     });
+    // Limpiar en la nube
+    syncToCloud();
   },
 };
 
