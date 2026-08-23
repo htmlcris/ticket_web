@@ -179,7 +179,6 @@ export default function EvidenceModal({ activity, isOpen, onConfirm, onCancel })
             id="evidence-photo"
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={handleFileChange}
             className="hidden"
           />
