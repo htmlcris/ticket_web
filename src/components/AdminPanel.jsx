@@ -6,6 +6,8 @@ export default function AdminPanel() {
   const [data, setData] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const fetchState = async () => {
     try {
       const res = await fetch('/api/state');
@@ -14,10 +16,14 @@ export default function AdminPanel() {
         if (result.success) {
           setData(result.data);
           setLastUpdate(new Date());
+          setErrorMsg(null);
         }
+      } else {
+        setErrorMsg(`Error ${res.status}: La base de datos no está respondiendo.`);
       }
     } catch (error) {
       console.error('Error fetching state in AdminPanel:', error);
+      setErrorMsg('No se pudo conectar al servidor.');
     }
   };
 
@@ -34,8 +40,20 @@ export default function AdminPanel() {
     return (
       <div className="bg-cosmic min-h-screen flex items-center justify-center flex-col relative text-white">
         <StarField count={50} />
-        <span className="text-4xl animate-spin mb-4">🌀</span>
-        <h2 className="font-display">Cargando Panel de Observador...</h2>
+        {errorMsg ? (
+          <div className="bg-red-500/20 border border-red-500 p-6 rounded-xl max-w-md text-center z-10">
+            <h2 className="text-xl font-bold mb-2">Error de Conexión</h2>
+            <p className="text-red-200">{errorMsg}</p>
+            <p className="text-sm mt-4 text-slate-300">
+              Parece que la base de datos de Vercel KV no está correctamente vinculada al proyecto.
+            </p>
+          </div>
+        ) : (
+          <>
+            <span className="text-4xl animate-spin mb-4">🌀</span>
+            <h2 className="font-display">Cargando Panel de Observador...</h2>
+          </>
+        )}
       </div>
     );
   }
