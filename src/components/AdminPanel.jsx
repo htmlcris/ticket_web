@@ -152,18 +152,6 @@ function PrizeCountdown({ prize }) {
             </div>
           </div>
         </div>
-
-        {/* Botón marcar cumplido */}
-        <motion.button
-          className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-          onClick={handleRedeem}
-          disabled={redeeming}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ boxShadow: '0 4px 20px rgba(168,85,247,0.4)' }}
-        >
-          {redeeming ? '⏳...' : '✅ Cumplido'}
-        </motion.button>
       </div>
     </motion.div>
   );
@@ -351,7 +339,6 @@ export default function AdminPanel() {
                   <PrizeCountdown
                     key={prize.pullId}
                     prize={prize}
-                    onRedeem={handleRedeem}
                   />
                 ))}
               </AnimatePresence>
