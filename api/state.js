@@ -6,12 +6,30 @@
  * - POST: Actualiza el estado global
  */
 
-import { kv } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
+
+const getKVClient = () => {
+  // Intentar usar las variables por defecto de Vercel KV
+  let url = process.env.KV_REST_API_URL;
+  let token = process.env.KV_REST_API_TOKEN;
+
+  // Si no existen, intentar con el prefijo "STORAGE_" (que es el que se usó al vincular)
+  if (!url) {
+    url = process.env.STORAGE_REST_API_URL || process.env.STORAGE_URL;
+    token = process.env.STORAGE_REST_API_TOKEN || process.env.STORAGE_TOKEN;
+  }
+
+  // Si a pesar de todo no existen, retornar cliente genérico (que fallará con 500)
+  return createClient({
+    url: url || '',
+    token: token || ''
+  });
+};
+
+const kv = getKVClient();
 
 export default async function handler(req, res) {
   const STATE_KEY = 'gacha_global_state';
-
-  // Manejo de errores para falta de DB
   if (!process.env.KV_REST_API_URL && !process.env.KV_URL) {
     console.warn('Advertencia: No se detectaron las variables de entorno de Redis.');
   }
