@@ -1,8 +1,8 @@
 /**
- * AdminPanel.jsx — Panel de observador en tiempo real.
+ * AdminPanel.jsx — Panel de monitoreo en tiempo real (solo lectura).
  *
- * Muestra tickets, actividades, evidencias, historial de premios
- * con contador regresivo de 24h y botón "Marcar como cumplido".
+ * Cristian ve aquí los premios que TIENE QUE CUMPLIR, con el contador de 24h.
+ * El botón de marcar cumplido está en la página del Gacha (para la pareja).
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -28,9 +28,8 @@ function getCountdown(timestamp) {
 
 /* ─── Sub-componente: contador de un premio ───────────────────── */
 
-function PrizeCountdown({ prize, onRedeem }) {
+function PrizeCountdown({ prize }) {
   const [countdown, setCountdown] = useState(() => getCountdown(prize.timestamp));
-  const [redeeming, setRedeeming] = useState(false);
 
   // Actualizar el contador cada segundo
   useEffect(() => {
@@ -40,16 +39,6 @@ function PrizeCountdown({ prize, onRedeem }) {
     }, 1000);
     return () => clearInterval(timer);
   }, [prize.timestamp, prize.redeemed]);
-
-  const handleRedeem = useCallback(async () => {
-    if (redeeming) return;
-    setRedeeming(true);
-    try {
-      await onRedeem(prize.pullId);
-    } finally {
-      setRedeeming(false);
-    }
-  }, [prize.pullId, onRedeem, redeeming]);
 
   const wonDate = new Date(prize.timestamp || Date.now());
 
@@ -102,16 +91,8 @@ function PrizeCountdown({ prize, onRedeem }) {
             <div className="text-xs text-slate-500 mt-0.5">
               Ganado: {wonDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} {wonDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
             </div>
+            <div className="text-xs text-orange-300 mt-2 font-medium">⚠️ La pareja puede marcarlo como cumplido en su app.</div>
           </div>
-          <motion.button
-            className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg"
-            onClick={handleRedeem}
-            disabled={redeeming}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {redeeming ? '⏳...' : '✅ Marcar cumplido'}
-          </motion.button>
         </div>
       </motion.div>
     );

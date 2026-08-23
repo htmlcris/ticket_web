@@ -74,6 +74,7 @@ function AppContent() {
   const {
     inventory,
     addPrize,
+    updatePrize,
     stats,
   } = useInventory();
 
@@ -89,7 +90,6 @@ function AppContent() {
   const handlePull = useCallback(() => {
     const spent = spendTicket();
     if (!spent) return;
-
     pull((pullResult) => {
       addPrize(pullResult);
     });
@@ -98,6 +98,24 @@ function AppContent() {
   const handleCloseReveal = useCallback(() => {
     reset();
   }, [reset]);
+
+  // Marca un premio como cumplido llamando al API
+  const handleRedeem = useCallback(async (pullId) => {
+    try {
+      const res = await fetch('/api/redeem', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pullId }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        // Actualizar el prize en el inventario local (reemplaza el existente)
+        updatePrize(result.prize);
+      }
+    } catch (err) {
+      console.error('Error redeeming prize:', err);
+    }
+  }, [updatePrize]);
 
   return (
     <div className="bg-cosmic min-h-screen relative">
@@ -145,7 +163,7 @@ function AppContent() {
         <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
       </div>
 
-      <Inventory inventory={inventory} stats={stats} />
+      <Inventory inventory={inventory} stats={stats} onRedeem={handleRedeem} />
     </div>
   );
 }

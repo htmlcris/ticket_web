@@ -17,7 +17,7 @@ const FILTERS = [
   { key: 'legendary', label: 'Legendarios', emoji: '⭐' },
 ];
 
-export default function Inventory({ inventory, stats }) {
+export default function Inventory({ inventory, stats, onRedeem }) {
   const [filter, setFilter] = useState('all');
 
   const filteredInventory = useMemo(() => {
@@ -95,6 +95,7 @@ export default function Inventory({ inventory, stats }) {
               key={prize.pullId}
               prize={prize}
               index={index}
+              onRedeem={onRedeem}
             />
           ))}
         </AnimatePresence>

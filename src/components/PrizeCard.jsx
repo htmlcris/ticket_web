@@ -2,34 +2,45 @@
  * PrizeCard.jsx — Card individual de un premio en el inventario.
  *
  * Muestra el emoji, nombre, descripción, rareza y fecha de obtención.
- * Incluye efecto hover con glow según la rareza.
+ * Si el premio NO ha sido cumplido, muestra un botón para marcarlo.
+ * Si ya fue cumplido, muestra un badge verde.
  */
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getRarityConfig } from '../utils/rarityConfig';
 import RarityBadge from './RarityBadge';
 
-export default function PrizeCard({ prize, index = 0 }) {
+export default function PrizeCard({ prize, index = 0, onRedeem }) {
   const config = getRarityConfig(prize.rarity);
+  const [redeeming, setRedeeming] = useState(false);
+
+  const handleRedeem = async () => {
+    if (redeeming || !onRedeem) return;
+    setRedeeming(true);
+    try {
+      await onRedeem(prize.pullId);
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  const wonDate = new Date(prize.timestamp || prize.obtainedAt || Date.now());
 
   return (
     <motion.div
-      className={`glass-card glass-card-hover p-4 ${config.glow}`}
+      className={`glass-card glass-card-hover p-4 ${prize.redeemed ? 'border-green-500/30' : config.glow}`}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        delay: index * 0.05,
-        ease: 'easeOut',
-      }}
+      transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
       whileHover={{ scale: 1.02 }}
       layout
     >
       <div className="flex items-start gap-3">
-        {/* Emoji grande */}
+        {/* Emoji */}
         <div
           className={`text-3xl sm:text-4xl flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center
-            ${config.colors.bg} ${config.colors.border} border`}
+            ${prize.redeemed ? 'bg-green-500/10 border-green-500/30' : `${config.colors.bg} ${config.colors.border}`} border`}
         >
           {prize.emoji}
         </div>
@@ -47,17 +58,37 @@ export default function PrizeCard({ prize, index = 0 }) {
             {prize.description}
           </p>
 
-          {/* Fecha */}
-          {prize.obtainedAt && (
-            <p className="text-slate-500 text-xs">
-              {new Date(prize.obtainedAt).toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
+          {/* Fecha de obtención */}
+          <p className="text-slate-500 text-xs mb-3">
+            Ganado: {wonDate.toLocaleDateString('es-ES', {
+              day: 'numeric', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+            })}
+          </p>
+
+          {/* Estado / Acción */}
+          {prize.redeemed ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-bold">
+                ✅ ¡Ya lo cumplió!
+              </span>
+              {prize.redeemedAt && (
+                <span className="text-slate-500 text-xs">
+                  {new Date(prize.redeemedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                </span>
+              )}
+            </div>
+          ) : (
+            <motion.button
+              className="w-full py-2 rounded-xl text-xs font-bold text-white transition-all bg-gradient-to-r from-purple-600 to-pink-600"
+              style={{ boxShadow: '0 4px 15px rgba(168,85,247,0.35)' }}
+              onClick={handleRedeem}
+              disabled={redeeming}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {redeeming ? '⏳ Guardando...' : '✅ Marcar como cumplido'}
+            </motion.button>
           )}
         </div>
       </div>

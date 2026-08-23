@@ -46,6 +46,20 @@ export function useInventory() {
   }, []);
 
   /**
+   * Reemplaza un premio existente por pullId (usado para marcar como cumplido).
+   * @param {object} updatedPrize - Premio actualizado con los nuevos campos
+   */
+  const updatePrize = useCallback((updatedPrize) => {
+    setInventory((prev) => {
+      const updated = prev.map((p) =>
+        p.pullId === updatedPrize.pullId ? { ...p, ...updatedPrize } : p
+      );
+      storageService.saveInventory(updated);
+      return updated;
+    });
+  }, []);
+
+  /**
    * Filtra premios por rareza.
    * @param {string} rarity
    * @returns {Array<object>}
@@ -80,6 +94,7 @@ export function useInventory() {
     inventory,
     addPrize,
     removePrize,
+    updatePrize,
     getByRarity,
     stats,
     clearInventory,
