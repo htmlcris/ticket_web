@@ -101,16 +101,31 @@ function AppContent() {
 
   return (
     <div className="bg-cosmic min-h-screen relative">
-      <StarField count={80} />
+      <StarField count={100} />
       <Header tickets={tickets} />
+
+      {/* Separador decorativo */}
+      <div className="max-w-3xl mx-auto px-4 mb-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+      </div>
+
       <Activities
         canClaim={canClaim}
         getEvidence={getEvidence}
         onClaimTicket={claimTicket}
       />
-      <div className="max-w-3xl mx-auto px-4 mb-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      {/* Separador decorativo con glow */}
+      <div className="max-w-3xl mx-auto px-4 mb-2">
+        <div className="relative">
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.15) 0%, transparent 70%)', height: '1px', filter: 'blur(3px)' }}
+          />
+        </div>
       </div>
+
       <GachaPull
         isPulling={isPulling}
         isIdle={isIdle}
@@ -124,9 +139,12 @@ function AppContent() {
           <PrizeReveal result={result} onClose={handleCloseReveal} />
         )}
       </AnimatePresence>
+
+      {/* Separador decorativo */}
       <div className="max-w-3xl mx-auto px-4 mb-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
       </div>
+
       <Inventory inventory={inventory} stats={stats} />
     </div>
   );

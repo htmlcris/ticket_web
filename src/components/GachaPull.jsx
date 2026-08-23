@@ -1,126 +1,118 @@
 /**
- * GachaPull.jsx — Ruleta giratoria real con premios visibles.
+ * GachaPull.jsx — Ruleta giratoria con premios coordinados.
  *
- * Reemplaza el orbe por una ruleta circular dividida en segmentos,
- * cada uno mostrando un premio con su emoji. Gira con deceleración
- * realista y aterriza en el premio calculado por el backend.
+ * El orden de los segmentos es FIJO (sin shuffle aleatorio)
+ * para garantizar que el puntero siempre aterrice en el premio correcto.
  */
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { prizes } from '../data/prizes';
-import { getRarityConfig } from '../utils/rarityConfig';
 
 /**
- * Construye los segmentos de la ruleta añadiendo exactamente 1 de cada premio.
+ * Construye los segmentos en orden fijo (sin shuffle).
+ * El servidor selecciona el premio por ID, y la ruleta
+ * lo busca por ID también, por lo que el orden debe ser estable.
  */
 function buildWheelSegments() {
   const segments = [];
-
-  // Agregar comunes
-  prizes.common.forEach((prize) => {
-    segments.push({ ...prize, rarity: 'common' });
-  });
-
-  // Agregar raros
-  prizes.rare.forEach((prize) => {
-    segments.push({ ...prize, rarity: 'rare' });
-  });
-
-  // Agregar legendario
-  prizes.legendary.forEach((prize) => {
-    segments.push({ ...prize, rarity: 'legendary' });
-  });
-
-  // Mezclar para que no estén agrupados
-  for (let i = segments.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [segments[i], segments[j]] = [segments[j], segments[i]];
-  }
-
+  prizes.legendary.forEach((p) => segments.push({ ...p, rarity: 'legendary' }));
+  prizes.rare.forEach((p) => segments.push({ ...p, rarity: 'rare' }));
+  prizes.common.forEach((p) => segments.push({ ...p, rarity: 'common' }));
   return segments;
 }
 
-/**
- * Calcula el ángulo de rotación final para aterrizar en un segmento específico.
- * Incluye múltiples vueltas para efecto dramático.
- */
-function calculateFinalRotation(targetIndex, totalSegments, extraSpins = 5) {
-  const segmentAngle = 360 / totalSegments;
-  // El pointer está arriba (0°), así que necesitamos que el segmento objetivo
-  // quede alineado con la parte superior
-  const targetAngle = segmentAngle * targetIndex + segmentAngle / 2;
-  // Rotamos en sentido horario: 360° * vueltas extras + ángulo para llegar al objetivo
-  // Restamos porque la ruleta gira y queremos que el target quede arriba
-  const finalRotation = 360 * extraSpins + (360 - targetAngle);
-  return finalRotation;
-}
+// Segmentos siempre en el mismo orden (módulo-level constante)
+const WHEEL_SEGMENTS = buildWheelSegments();
 
 /**
- * Encuentra el índice del segmento que coincide con el premio ganado.
+ * Dado un índice de segmento, calcula cuántos grados girar para que
+ * ese segmento quede apuntado por el indicador (arriba, 270° en SVG coords).
  */
-function findSegmentIndex(segments, result) {
+function calculateFinalRotation(targetIndex, totalSegments, currentRotation, extraSpins = 5) {
+  const segmentAngle = 360 / totalSegments;
+  // Centro del segmento objetivo en grados (0 = arriba)
+  const segmentCenter = targetIndex * segmentAngle + segmentAngle / 2;
+  // Necesitamos que ese ángulo quede en la posición "arriba" del círculo
+  const neededAngle = (360 - segmentCenter) % 360;
+  // Normalizamos la rotación actual para evitar números gigantes
+  const currentMod = ((currentRotation % 360) + 360) % 360;
+  let delta = neededAngle - currentMod;
+  if (delta <= 0) delta += 360;
+  return currentRotation + delta + 360 * extraSpins;
+}
+
+function findSegmentIndex(result) {
   if (!result) return 0;
-  const idx = segments.findIndex(
+  const idx = WHEEL_SEGMENTS.findIndex(
     (s) => s.id === result.prize.id && s.rarity === result.rarity
   );
   return idx >= 0 ? idx : 0;
 }
 
-// Colores de fondo para cada segmento según rareza
-const SEGMENT_COLORS = {
-  common: ['rgba(96, 165, 250, 0.15)', 'rgba(96, 165, 250, 0.25)'],
-  rare: ['rgba(168, 85, 247, 0.2)', 'rgba(168, 85, 247, 0.35)'],
-  legendary: ['rgba(251, 191, 36, 0.25)', 'rgba(251, 191, 36, 0.4)'],
-};
-
-const SEGMENT_BORDER_COLORS = {
-  common: 'rgba(96, 165, 250, 0.4)',
-  rare: 'rgba(168, 85, 247, 0.5)',
-  legendary: 'rgba(251, 191, 36, 0.6)',
+// Paleta de colores por rareza — más vibrante y clara
+const RARITY_PALETTE = {
+  common: {
+    fill1: '#1e3a5f',
+    fill2: '#1a3352',
+    border: '#3b82f6',
+    text: '#93c5fd',
+  },
+  rare: {
+    fill1: '#3b1f6e',
+    fill2: '#2e1859',
+    border: '#a855f7',
+    text: '#d8b4fe',
+  },
+  legendary: {
+    fill1: '#5c3a00',
+    fill2: '#4a2e00',
+    border: '#fbbf24',
+    text: '#fde68a',
+  },
 };
 
 export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPull, hasTickets = true }) {
-  const segments = useMemo(() => buildWheelSegments(), []);
+  const segments = WHEEL_SEGMENTS;
   const totalSegments = segments.length;
   const segmentAngle = 360 / totalSegments;
 
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
-  const wheelRef = useRef(null);
+  const spinDuration = useRef(4.5);
 
-  /**
-   * Cuando el resultado llega y estamos en pulling, inicia el giro.
-   */
   useEffect(() => {
     if (isPulling && result && !isSpinning) {
-      const targetIndex = findSegmentIndex(segments, result);
-      const finalRotation = calculateFinalRotation(targetIndex, totalSegments, 4 + Math.random() * 3);
+      const targetIndex = findSegmentIndex(result);
+      spinDuration.current = 4 + Math.random() * 1.5;
+      const finalRotation = calculateFinalRotation(targetIndex, totalSegments, rotation, 5 + Math.floor(Math.random() * 3));
 
       setIsSpinning(true);
-      setRotation((prev) => prev + finalRotation);
+      setRotation(finalRotation);
     }
-  }, [isPulling, result, segments, totalSegments, isSpinning]);
+  }, [isPulling, result, totalSegments, isSpinning, rotation]);
 
-  /**
-   * Reset cuando volvemos a idle.
-   */
   useEffect(() => {
     if (isIdle) {
       setIsSpinning(false);
     }
   }, [isIdle]);
 
+  const cx = 150;
+  const cy = 150;
+  const outerR = 144;
+  const innerR = 32;
+
   return (
     <div className="relative z-10 flex flex-col items-center justify-center py-8 sm:py-12">
-      {/* Título de la sección */}
+      {/* Título */}
       <motion.div
-        className="text-center mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        className="text-center mb-8"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-white mb-1">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-white mb-1 tracking-tight">
           🎰 Ruleta Cósmica
         </h2>
         <p className="text-slate-400 text-sm">
@@ -128,144 +120,137 @@ export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPu
         </p>
       </motion.div>
 
-      {/* Contenedor de la ruleta */}
+      {/* Ruleta container */}
       <div className="relative mb-8">
-        {/* Pointer / flecha indicadora (arriba) */}
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+        {/* Aura de fondo */}
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            inset: '-30px',
+            background: 'radial-gradient(circle, rgba(168,85,247,0.18) 0%, rgba(96,165,250,0.08) 50%, transparent 70%)',
+            filter: 'blur(10px)',
+          }}
+        />
+
+        {/* Puntero (triángulo amarillo) */}
+        <div
+          className="absolute z-20 left-1/2 -translate-x-1/2"
+          style={{ top: '-14px' }}
+        >
           <div
-            className="w-0 h-0"
             style={{
-              borderLeft: '12px solid transparent',
-              borderRight: '12px solid transparent',
-              borderTop: '20px solid #fbbf24',
-              filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))',
+              width: 0,
+              height: 0,
+              borderLeft: '13px solid transparent',
+              borderRight: '13px solid transparent',
+              borderTop: '22px solid #fbbf24',
+              filter: 'drop-shadow(0 0 10px rgba(251,191,36,0.9))',
             }}
           />
         </div>
 
-        {/* Glow de fondo de la ruleta */}
-        <div
-          className="absolute inset-[-20px] rounded-full pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
-          }}
-        />
-
-        {/* Ruleta SVG */}
+        {/* Ruleta girando */}
         <motion.div
-          ref={wheelRef}
-          className={`relative w-72 h-72 sm:w-80 sm:h-80 ${
-            !hasTickets && isIdle ? 'opacity-50' : ''
-          }`}
+          className={`relative w-[288px] h-[288px] sm:w-[320px] sm:h-[320px] ${!hasTickets && isIdle ? 'opacity-50' : ''}`}
           animate={{ rotate: rotation }}
           transition={
             isSpinning
-              ? {
-                  duration: 4 + Math.random(),
-                  ease: [0.2, 0.8, 0.3, 1], // Custom cubic-bezier for realistic deceleration
-                }
+              ? { duration: spinDuration.current, ease: [0.15, 0.85, 0.25, 1] }
               : { duration: 0 }
           }
           style={{ willChange: 'transform' }}
         >
-          <svg
-            viewBox="0 0 300 300"
-            className="w-full h-full drop-shadow-2xl"
-          >
-            {/* Borde exterior */}
-            <circle
-              cx="150" cy="150" r="148"
-              fill="none"
-              stroke="rgba(168, 85, 247, 0.3)"
-              strokeWidth="3"
-            />
+          <svg viewBox="0 0 300 300" className="w-full h-full drop-shadow-2xl">
+            {/* Borde exterior decorativo */}
+            <circle cx={cx} cy={cy} r={outerR + 3} fill="none" stroke="rgba(168,85,247,0.25)" strokeWidth="6" />
+            <circle cx={cx} cy={cy} r={outerR + 3} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4 6" />
 
-            {/* Segmentos */}
-            {segments.map((segment, i) => {
-              const startAngle = (i * segmentAngle - 90) * (Math.PI / 180);
-              const endAngle = ((i + 1) * segmentAngle - 90) * (Math.PI / 180);
-              const radius = 145;
-              const innerRadius = 30;
+            {segments.map((seg, i) => {
+              const startDeg = i * segmentAngle - 90;
+              const endDeg = startDeg + segmentAngle;
+              const toRad = (d) => d * (Math.PI / 180);
 
-              const x1 = 150 + radius * Math.cos(startAngle);
-              const y1 = 150 + radius * Math.sin(startAngle);
-              const x2 = 150 + radius * Math.cos(endAngle);
-              const y2 = 150 + radius * Math.sin(endAngle);
-              const ix1 = 150 + innerRadius * Math.cos(startAngle);
-              const iy1 = 150 + innerRadius * Math.sin(startAngle);
-              const ix2 = 150 + innerRadius * Math.cos(endAngle);
-              const iy2 = 150 + innerRadius * Math.sin(endAngle);
+              const x1 = cx + outerR * Math.cos(toRad(startDeg));
+              const y1 = cy + outerR * Math.sin(toRad(startDeg));
+              const x2 = cx + outerR * Math.cos(toRad(endDeg));
+              const y2 = cy + outerR * Math.sin(toRad(endDeg));
+              const ix1 = cx + innerR * Math.cos(toRad(startDeg));
+              const iy1 = cy + innerR * Math.sin(toRad(startDeg));
+              const ix2 = cx + innerR * Math.cos(toRad(endDeg));
+              const iy2 = cy + innerR * Math.sin(toRad(endDeg));
+              const large = segmentAngle > 180 ? 1 : 0;
 
-              const largeArc = segmentAngle > 180 ? 1 : 0;
-
-              const pathData = [
+              const pathD = [
                 `M ${ix1} ${iy1}`,
                 `L ${x1} ${y1}`,
-                `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                `A ${outerR} ${outerR} 0 ${large} 1 ${x2} ${y2}`,
                 `L ${ix2} ${iy2}`,
-                `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1}`,
+                `A ${innerR} ${innerR} 0 ${large} 0 ${ix1} ${iy1}`,
                 'Z',
               ].join(' ');
 
-              const colors = SEGMENT_COLORS[segment.rarity];
-              const bgColor = i % 2 === 0 ? colors[0] : colors[1];
-              const borderColor = SEGMENT_BORDER_COLORS[segment.rarity];
+              const pal = RARITY_PALETTE[seg.rarity];
+              const fillColor = i % 2 === 0 ? pal.fill1 : pal.fill2;
 
-              // Rotación del texto para que apunte hacia afuera y no quede al revés
-              const midAngleDeg = (i + 0.5) * segmentAngle - 90;
-              const isLeft = (midAngleDeg % 360) > 90 && (midAngleDeg % 360) < 270;
-              
-              // Texto truncado para que quepa en el segmento
-              const displayName = segment.name.length > 22 
-                ? segment.name.substring(0, 20) + '...' 
-                : segment.name;
+              // Posición del contenido (emoji + texto) en el centro del segmento
+              const midDeg = startDeg + segmentAngle / 2;
+              const contentR = (outerR + innerR) / 2;
+              const contentX = cx + contentR * Math.cos(toRad(midDeg));
+              const contentY = cy + contentR * Math.sin(toRad(midDeg));
+
+              // Rotación del texto para leerlo radialmente
+              const textRotation = midDeg + 90;
+
+              // Nombre truncado
+              const maxChars = segmentAngle > 30 ? 16 : 10;
+              const label = seg.name.length > maxChars
+                ? seg.name.substring(0, maxChars - 2) + '…'
+                : seg.name;
 
               return (
-                <g key={`${segment.id}-${i}`}>
-                  {/* Segmento */}
+                <g key={`${seg.id}-${i}`}>
                   <path
-                    d={pathData}
-                    fill={bgColor}
-                    stroke={borderColor}
-                    strokeWidth="0.5"
+                    d={pathD}
+                    fill={fillColor}
+                    stroke={pal.border}
+                    strokeWidth="0.8"
+                    strokeOpacity="0.5"
                   />
-                  {/* Emoji y Texto */}
-                  <g transform={`translate(150, 150) rotate(${midAngleDeg}) translate(90, 0) ${isLeft ? 'rotate(180)' : ''}`}>
+                  <g transform={`translate(${contentX}, ${contentY}) rotate(${textRotation})`}>
+                    {/* Emoji */}
                     <text
                       x="0"
-                      y="-6"
+                      y="-9"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="18"
+                      fontSize={segmentAngle >= 40 ? '16' : '12'}
                       className="select-none"
                     >
-                      {segment.emoji}
+                      {seg.emoji}
                     </text>
+                    {/* Nombre del premio */}
                     <text
                       x="0"
-                      y="10"
+                      y="9"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="7"
-                      fill="rgba(255,255,255,0.9)"
-                      className="select-none font-medium"
+                      fontSize={segmentAngle >= 40 ? '7.5' : '6'}
+                      fill={pal.text}
+                      fontWeight="600"
+                      className="select-none"
                     >
-                      {displayName}
+                      {label}
                     </text>
                   </g>
                 </g>
               );
             })}
 
-            {/* Centro de la ruleta */}
-            <circle
-              cx="150" cy="150" r="28"
-              fill="rgba(10, 10, 26, 0.9)"
-              stroke="rgba(168, 85, 247, 0.5)"
-              strokeWidth="2"
-            />
+            {/* Centro */}
+            <circle cx={cx} cy={cy} r={innerR} fill="#0a0a1a" stroke="rgba(168,85,247,0.6)" strokeWidth="2" />
+            <circle cx={cx} cy={cy} r={innerR - 4} fill="none" stroke="rgba(168,85,247,0.2)" strokeWidth="1" />
             <text
-              x="150" y="150"
+              x={cx} y={cy}
               textAnchor="middle"
               dominantBaseline="central"
               fontSize="20"
@@ -277,12 +262,12 @@ export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPu
         </motion.div>
       </div>
 
-      {/* Botón / mensaje */}
+      {/* Botón / estado */}
       <AnimatePresence mode="wait">
         {isIdle && hasTickets && (
           <motion.button
             key="pull-btn"
-            className="btn-pull text-lg"
+            className="btn-pull text-lg px-10"
             onClick={onPull}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -292,37 +277,45 @@ export default function GachaPull({ isPulling, isIdle, isRevealing, result, onPu
             whileTap={{ scale: 0.95 }}
             id="gacha-pull-button"
           >
-            ✨ Girar <span className="ml-1 text-sm opacity-80">(🎟️ x1)</span>
+            ✨ Girar <span className="ml-1 text-sm opacity-75">(🎟️ ×1)</span>
           </motion.button>
         )}
 
         {isIdle && !hasTickets && (
           <motion.div
             key="no-tickets"
-            className="text-center"
+            className="text-center glass-card px-6 py-4 border border-white/10"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <p className="text-slate-400 text-sm mb-2">
-              🎟️ Necesitas tickets para girar
-            </p>
-            <p className="text-slate-500 text-xs">
-              Completa actividades arriba para ganar tickets
-            </p>
+            <p className="text-slate-300 text-sm font-medium mb-1">🎟️ Sin tickets disponibles</p>
+            <p className="text-slate-500 text-xs">Completa actividades arriba para ganar tickets</p>
           </motion.div>
         )}
 
         {(isPulling || isSpinning) && (
-          <motion.p
+          <motion.div
             key="spinning-text"
-            className="text-slate-400 text-sm font-display tracking-widest uppercase"
+            className="flex flex-col items-center gap-2"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            Girando el destino...
-          </motion.p>
+            <p className="text-slate-300 text-sm font-display tracking-widest uppercase">
+              Girando el destino...
+            </p>
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-purple-400"
+                  animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
+                  transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
