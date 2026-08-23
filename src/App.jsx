@@ -15,6 +15,7 @@ import Activities from './components/Activities';
 import GachaPull from './components/GachaPull';
 import PrizeReveal from './components/PrizeReveal';
 import Inventory from './components/Inventory';
+import AdminPanel from './components/AdminPanel';
 
 // Hooks
 import { useGacha } from './hooks/useGacha';
@@ -26,12 +27,23 @@ import storageService from './services/storageService';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Verificar si estamos en modo admin
+    if (window.location.search.includes('admin=true')) {
+      setIsAdmin(true);
+      return; // No necesitamos cargar el storageService normal si somos admin
+    }
+
     storageService.init().then(() => {
       setIsReady(true);
     });
   }, []);
+
+  if (isAdmin) {
+    return <AdminPanel />;
+  }
 
   if (!isReady) {
     return (
