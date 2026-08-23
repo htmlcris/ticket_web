@@ -58,7 +58,10 @@ export default function AdminPanel() {
     );
   }
 
-  const { tickets, inventory, activityLog, pullCount } = data;
+  const tickets = data['gacha_cosmico_tickets'] || 0;
+  const inventory = data['gacha_cosmico_inventory'] || [];
+  const activityLog = data['gacha_cosmico_activity_log'] || [];
+  const pullCount = data['gacha_cosmico_pull_count'] || 0;
 
   return (
     <div className="bg-cosmic min-h-screen relative p-4 sm:p-8 text-white overflow-y-auto">
