@@ -83,8 +83,11 @@ function AppContent() {
     claimTicket,
     spendTicket,
     canClaim,
+    canClaim,
     getEvidence,
     hasTickets,
+    exerciseStreak,
+    exerciseWeekly,
   } = useTickets();
 
   const handlePull = useCallback(() => {
@@ -131,6 +134,8 @@ function AppContent() {
         canClaim={canClaim}
         getEvidence={getEvidence}
         onClaimTicket={claimTicket}
+        exerciseStreak={exerciseStreak}
+        exerciseWeekly={exerciseWeekly}
       />
 
       {/* Separador decorativo con glow */}

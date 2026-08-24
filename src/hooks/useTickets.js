@@ -17,6 +17,10 @@ import storageService from '../services/storageService';
 export function useTickets() {
   const [tickets, setTickets] = useState(() => storageService.getTickets());
   const [activityLog, setActivityLog] = useState(() => storageService.getActivityLog());
+  
+  // Estados para la racha de ejercicios
+  const [exerciseStreak, setExerciseStreak] = useState(() => storageService.getExerciseStreak());
+  const [exerciseWeekly, setExerciseWeekly] = useState(() => storageService.getExerciseWeekly());
 
   /**
    * Al montar, verificar si es un nuevo día y resetear actividades.
@@ -26,6 +30,8 @@ export function useTickets() {
     const didReset = storageService.checkAndResetDaily();
     if (didReset) {
       setActivityLog([]);
+      setExerciseStreak(storageService.getExerciseStreak());
+      setExerciseWeekly(storageService.getExerciseWeekly());
       // Los tickets NO se resetean, solo las actividades
     }
   }, []);
@@ -66,6 +72,11 @@ export function useTickets() {
       // Registrar actividad con evidencia
       const updatedLog = storageService.logActivity(activityId, photoBase64);
       setActivityLog(updatedLog);
+
+      if (activityId === 'exercise') {
+        setExerciseStreak(storageService.getExerciseStreak());
+        setExerciseWeekly(storageService.getExerciseWeekly());
+      }
 
       // Agregar 1 ticket
       const newTickets = storageService.addTicket();
@@ -110,5 +121,7 @@ export function useTickets() {
     canClaim,
     getEvidence,
     hasTickets: tickets > 0,
+    exerciseStreak,
+    exerciseWeekly,
   };
 }

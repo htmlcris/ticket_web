@@ -11,7 +11,7 @@ import activities from '../data/activities';
 import ActivityCard from './ActivityCard';
 import EvidenceModal from './EvidenceModal';
 
-export default function Activities({ canClaim, getEvidence, onClaimTicket }) {
+export default function Activities({ canClaim, getEvidence, onClaimTicket, exerciseStreak, exerciseWeekly }) {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -84,6 +84,8 @@ export default function Activities({ canClaim, getEvidence, onClaimTicket }) {
               evidence={evidence}
               onClaim={handleClaim}
               index={index}
+              exerciseStreak={exerciseStreak}
+              exerciseWeekly={exerciseWeekly}
             />
           );
         })}

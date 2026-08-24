@@ -13,6 +13,8 @@ export default function ActivityCard({
   evidence,
   onClaim,
   index = 0,
+  exerciseStreak = 0,
+  exerciseWeekly = 0,
 }) {
   return (
     <motion.div
@@ -47,6 +49,38 @@ export default function ActivityCard({
               {activity.name}
             </h3>
             <p className="text-slate-400 text-xs">{activity.description}</p>
+            
+            {activity.id === 'exercise' && (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider">
+                  <span className="text-emerald-400">🔥 Racha Total</span>
+                  <span className="text-emerald-300">{exerciseStreak} / 8</span>
+                </div>
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-400"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, (exerciseStreak / 8) * 100)}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                  />
+                </div>
+                <div className="text-[10px] text-slate-400 flex justify-between">
+                  <span>Meta Semanal:</span>
+                  <span className={exerciseWeekly >= 4 ? 'text-green-400 font-bold' : 'text-slate-300'}>
+                    {exerciseWeekly} / 4
+                  </span>
+                </div>
+                {exerciseStreak >= 8 && (
+                  <motion.div
+                    className="mt-1 text-xs font-bold text-yellow-400 bg-yellow-400/10 border border-yellow-400/30 rounded px-2 py-1 text-center"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    🎁 ¡PREMIO SORPRESA DESBLOQUEADO!
+                  </motion.div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Indicador de estado */}

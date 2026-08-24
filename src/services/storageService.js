@@ -12,6 +12,9 @@ const KEYS = {
   TICKETS: 'gacha_cosmico_tickets',
   ACTIVITY_LOG: 'gacha_cosmico_activity_log',
   LAST_RESET_DATE: 'gacha_cosmico_last_reset',
+  EXERCISE_STREAK: 'gacha_cosmico_exercise_streak',
+  EXERCISE_WEEKLY: 'gacha_cosmico_exercise_weekly',
+  EXERCISE_WEEK_ID: 'gacha_cosmico_exercise_week_id',
 };
 
 // Caché en memoria (se llena al hacer .init())
@@ -22,6 +25,9 @@ let memoryCache = {
   [KEYS.TICKETS]: 0,
   [KEYS.ACTIVITY_LOG]: [],
   [KEYS.LAST_RESET_DATE]: null,
+  [KEYS.EXERCISE_STREAK]: 0,
+  [KEYS.EXERCISE_WEEKLY]: 0,
+  [KEYS.EXERCISE_WEEK_ID]: null,
 };
 
 // Bandera para saber si ya cargamos de la DB
@@ -78,6 +84,20 @@ function syncToCloud() {
   }, 1000);
 }
 
+/**
+ * Devuelve un string identificador para la semana actual (empezando en Lunes).
+ * Ej: "2026-08-17" para toda la semana del 17 al 23 de agosto.
+ */
+function getCurrentWeekId() {
+  const now = new Date();
+  const day = now.getDay();
+  // day es 0 para Domingo, 1 para Lunes. Convertimos para que Lunes sea el inicio.
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  return monday.toISOString().split('T')[0];
+}
+
 const storageService = {
   /**
    * Inicializa el servicio conectándose a la base de datos de Vercel.
@@ -99,6 +119,9 @@ const storageService = {
             [KEYS.TICKETS]: data[KEYS.TICKETS] || 0,
             [KEYS.ACTIVITY_LOG]: data[KEYS.ACTIVITY_LOG] || [],
             [KEYS.LAST_RESET_DATE]: data[KEYS.LAST_RESET_DATE] || null,
+            [KEYS.EXERCISE_STREAK]: data[KEYS.EXERCISE_STREAK] || 0,
+            [KEYS.EXERCISE_WEEKLY]: data[KEYS.EXERCISE_WEEKLY] || 0,
+            [KEYS.EXERCISE_WEEK_ID]: data[KEYS.EXERCISE_WEEK_ID] || null,
           };
           
           // Actualizar LocalStorage con lo que vino de la nube
@@ -177,6 +200,34 @@ const storageService = {
     };
     const updated = [...log, entry];
     this.saveActivityLog(updated);
+
+    // Lógica especial para la racha de ejercicios
+    if (activityId === 'exercise') {
+      const currentWeekId = getCurrentWeekId();
+      let weekId = this.getExerciseWeekId();
+      
+      // Si por alguna razón el checkAndResetDaily falló, hacemos la verificación aquí también
+      if (weekId !== currentWeekId) {
+        const lastWeeklyCount = this.getExerciseWeekly();
+        if (weekId !== null && lastWeeklyCount < 4) {
+          this.saveExerciseStreak(0); // Faltaron días, reinicia racha total
+        }
+        this.saveExerciseWeekly(0);
+        this.saveExerciseWeekId(currentWeekId);
+      }
+
+      const newWeeklyCount = this.getExerciseWeekly() + 1;
+      this.saveExerciseWeekly(newWeeklyCount);
+
+      let newStreak = this.getExerciseStreak() + 1;
+      if (newStreak >= 8) {
+        // Alcanzó la racha sorpresa!
+        // No se reinicia aquí para que la UI lo muestre, lo reiniciaremos desde UI después,
+        // O lo podemos dejar en 8 para que reclame, y el backend no lo toque hasta que lo cobren.
+      }
+      this.saveExerciseStreak(newStreak);
+    }
+
     return updated;
   },
   isActivityCompletedToday(activityId) {
@@ -184,21 +235,50 @@ const storageService = {
     return log.some((entry) => entry.activityId === activityId);
   },
 
-  // --- Reset diario ---
+  // --- Reset diario y verificación semanal ---
 
   getLastResetDate() { return safeGet(KEYS.LAST_RESET_DATE, null); },
   saveLastResetDate(dateString) { safeSet(KEYS.LAST_RESET_DATE, dateString); },
   checkAndResetDaily() {
+    let didReset = false;
     const today = new Date().toDateString();
     const lastReset = this.getLastResetDate();
 
     if (lastReset !== today) {
       this.saveActivityLog([]);
       this.saveLastResetDate(today);
-      return true;
+      didReset = true;
     }
-    return false;
+
+    // Verificación de semana para la racha
+    const currentWeekId = getCurrentWeekId();
+    const storedWeekId = this.getExerciseWeekId();
+
+    if (storedWeekId !== null && storedWeekId !== currentWeekId) {
+      const lastWeeklyCount = this.getExerciseWeekly();
+      if (lastWeeklyCount < 4) {
+        // Si no cumplió 4 en la semana pasada, pierde la racha
+        this.saveExerciseStreak(0);
+      }
+      // Reiniciamos la semana
+      this.saveExerciseWeekly(0);
+      this.saveExerciseWeekId(currentWeekId);
+      didReset = true;
+    } else if (storedWeekId === null) {
+      this.saveExerciseWeekId(currentWeekId);
+    }
+
+    return didReset;
   },
+
+  // --- Racha de Ejercicios ---
+
+  getExerciseStreak() { return safeGet(KEYS.EXERCISE_STREAK, 0); },
+  saveExerciseStreak(streak) { safeSet(KEYS.EXERCISE_STREAK, streak); },
+  getExerciseWeekly() { return safeGet(KEYS.EXERCISE_WEEKLY, 0); },
+  saveExerciseWeekly(count) { safeSet(KEYS.EXERCISE_WEEKLY, count); },
+  getExerciseWeekId() { return safeGet(KEYS.EXERCISE_WEEK_ID, null); },
+  saveExerciseWeekId(weekId) { safeSet(KEYS.EXERCISE_WEEK_ID, weekId); },
 
   // --- Settings ---
 
@@ -211,7 +291,7 @@ const storageService = {
     // Resetear en memoria y local
     Object.keys(memoryCache).forEach(key => {
       memoryCache[key] = (key === KEYS.INVENTORY || key === KEYS.ACTIVITY_LOG) ? [] : 
-                         (key === KEYS.TICKETS || key === KEYS.PULL_COUNT) ? 0 : null;
+                         (key === KEYS.TICKETS || key === KEYS.PULL_COUNT || key === KEYS.EXERCISE_STREAK || key === KEYS.EXERCISE_WEEKLY) ? 0 : null;
       try { localStorage.removeItem(key); } catch (e) {}
     });
     // Limpiar en la nube

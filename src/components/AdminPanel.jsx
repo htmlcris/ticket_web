@@ -258,6 +258,8 @@ export default function AdminPanel() {
   const inventory = data['gacha_cosmico_inventory'] || [];
   const activityLog = data['gacha_cosmico_activity_log'] || [];
   const pullCount = data['gacha_cosmico_pull_count'] || 0;
+  const exerciseStreak = data['gacha_cosmico_exercise_streak'] || 0;
+  const exerciseWeekly = data['gacha_cosmico_exercise_weekly'] || 0;
 
   const pendingPrizes = inventory.filter((p) => !p.redeemed);
   const redeemedPrizes = inventory.filter((p) => p.redeemed);
@@ -309,6 +311,51 @@ export default function AdminPanel() {
               <div className="text-xs text-slate-400 mt-0.5">{label}</div>
             </div>
           ))}
+        </motion.div>
+
+        {/* Racha de ejercicio */}
+        <motion.div
+          className="mb-8 glass-card p-6 border border-emerald-500/30 bg-emerald-500/5 relative overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl pointer-events-none">🏋️</div>
+          <h2 className="text-xl font-bold mb-4 font-display flex items-center gap-2 text-emerald-400">
+            🔥 Racha de Ejercicio
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <div className="text-sm text-slate-400 mb-1">Racha Total (Meta: 8)</div>
+              <div className="flex items-end gap-2">
+                <span className="text-4xl font-bold font-display text-white">{exerciseStreak}</span>
+                <span className="text-slate-500 mb-1">/ 8</span>
+              </div>
+              <div className="w-full h-2 bg-black/40 rounded-full mt-3 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                  style={{ width: `${Math.min(100, (exerciseStreak / 8) * 100)}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-slate-400 mb-1">Progreso Semanal (Meta: 4)</div>
+              <div className="flex items-end gap-2">
+                <span className={`text-4xl font-bold font-display ${exerciseWeekly >= 4 ? 'text-green-400' : 'text-white'}`}>
+                  {exerciseWeekly}
+                </span>
+                <span className="text-slate-500 mb-1">/ 4</span>
+              </div>
+              <div className="text-xs text-slate-500 mt-3">
+                Si no llega a 4 al terminar la semana (Lunes-Domingo), la racha total volverá a 0.
+              </div>
+            </div>
+          </div>
+          {exerciseStreak >= 8 && (
+            <div className="mt-4 p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-sm font-bold text-center">
+              🎁 ¡Tu pareja ha alcanzado la racha de 8! Ya puedes darle el Premio Sorpresa.
+            </div>
+          )}
         </motion.div>
 
         {/* ── Premios pendientes de cumplir ── */}
