@@ -51,9 +51,9 @@ export default async function handler(req, res) {
       }
     `;
 
-    // Llamar al modelo gemini-1.5-flash
+    // Llamar al modelo gemini-3.6-flash
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [
         prompt,
         {
