@@ -83,7 +83,6 @@ function AppContent() {
     claimTicket,
     spendTicket,
     canClaim,
-    canClaim,
     getEvidence,
     hasTickets,
     exerciseStreak,
