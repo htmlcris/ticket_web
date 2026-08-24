@@ -37,17 +37,20 @@ export default async function handler(req, res) {
 
     // Definir el prompt estructurado para forzar un formato JSON estricto
     const prompt = `
-      Eres un experto nutricionista virtual. Analiza la siguiente imagen de comida.
-      Identifica qué platillo es, sus ingredientes principales, y haz una estimación realista de sus calorías totales basándote en la porción visualizada.
+      Eres un experto nutricionista virtual de alto nivel. Analiza la siguiente imagen de comida con mucho detalle.
+      Identifica qué platillo es, desglosa meticulosamente cada uno de sus componentes o ingredientes principales, y estima de forma realista las calorías para CADA ingrediente por separado, basándote en la porción visualizada.
 
       DEBES responder ÚNICAMENTE con un objeto JSON válido, sin markdown, sin texto adicional antes ni después.
       Usa exactamente esta estructura:
       {
-        "name": "Nombre del platillo detectado",
-        "ingredients": ["Ingrediente 1", "Ingrediente 2", ...],
-        "calories": 450,
+        "name": "Nombre detallado del platillo",
+        "ingredients": [
+          { "name": "Ingrediente 1 (ej. 150g de Pechuga de Pollo)", "calories": 240 },
+          { "name": "Ingrediente 2 (ej. 1 taza de Arroz blanco)", "calories": 200 }
+        ],
+        "calories": 440,
         "isHealthy": true,
-        "feedback": "Un mensaje corto, amigable y motivador sobre la comida (ej. '¡Se ve delicioso y lleno de proteína!')."
+        "feedback": "Un mensaje profesional, alentador y con un tip nutricional sobre esta comida."
       }
     `;
 

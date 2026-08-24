@@ -180,12 +180,17 @@ export default function CalorieScanner() {
               </div>
 
               <div className="mb-4">
-                <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Ingredientes Detectados</h4>
-                <div className="flex flex-wrap gap-1.5">
+                <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-3">
+                  Desglose Nutricional
+                </h4>
+                <div className="space-y-2">
                   {result.ingredients?.map((ing, i) => (
-                    <span key={i} className="bg-white/10 border border-white/5 text-slate-300 text-xs px-2 py-1 rounded-md">
-                      {ing}
-                    </span>
+                    <div key={i} className="flex justify-between items-center bg-white/5 border border-white/5 px-3 py-2 rounded-lg">
+                      <span className="text-slate-300 text-sm font-medium">{ing.name}</span>
+                      <span className="text-emerald-400 text-xs font-bold bg-emerald-400/10 px-2 py-1 rounded">
+                        {ing.calories} kcal
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
