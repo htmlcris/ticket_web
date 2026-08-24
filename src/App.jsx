@@ -16,6 +16,8 @@ import GachaPull from './components/GachaPull';
 import PrizeReveal from './components/PrizeReveal';
 import Inventory from './components/Inventory';
 import AdminPanel from './components/AdminPanel';
+import Navigation from './components/Navigation';
+import CalorieScanner from './components/CalorieScanner';
 
 // Hooks
 import { useGacha } from './hooks/useGacha';
@@ -62,6 +64,8 @@ export default function App() {
 }
 
 function AppContent() {
+  const [currentTab, setCurrentTab] = useState('gacha');
+
   const {
     isPulling,
     isRevealing,
@@ -120,54 +124,63 @@ function AppContent() {
   }, [updatePrize]);
 
   return (
-    <div className="bg-cosmic min-h-screen relative">
+    <div className="bg-cosmic min-h-screen relative pb-20">
       <StarField count={100} />
-      <Header tickets={tickets} />
+      
+      {currentTab === 'gacha' ? (
+        <>
+          <Header tickets={tickets} />
 
-      {/* Separador decorativo */}
-      <div className="max-w-3xl mx-auto px-4 mb-2">
-        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
-      </div>
+          {/* Separador decorativo */}
+          <div className="max-w-3xl mx-auto px-4 mb-2">
+            <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+          </div>
 
-      <Activities
-        canClaim={canClaim}
-        getEvidence={getEvidence}
-        onClaimTicket={claimTicket}
-        exerciseStreak={exerciseStreak}
-        exerciseWeekly={exerciseWeekly}
-      />
-
-      {/* Separador decorativo con glow */}
-      <div className="max-w-3xl mx-auto px-4 mb-2">
-        <div className="relative">
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
-          <div
-            className="absolute inset-0"
-            style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.15) 0%, transparent 70%)', height: '1px', filter: 'blur(3px)' }}
+          <Activities
+            canClaim={canClaim}
+            getEvidence={getEvidence}
+            onClaimTicket={claimTicket}
+            exerciseStreak={exerciseStreak}
+            exerciseWeekly={exerciseWeekly}
           />
-        </div>
-      </div>
 
-      <GachaPull
-        isPulling={isPulling}
-        isIdle={isIdle}
-        isRevealing={isRevealing}
-        result={result}
-        onPull={handlePull}
-        hasTickets={hasTickets}
-      />
-      <AnimatePresence>
-        {isRevealing && result && (
-          <PrizeReveal result={result} onClose={handleCloseReveal} />
-        )}
-      </AnimatePresence>
+          {/* Separador decorativo con glow */}
+          <div className="max-w-3xl mx-auto px-4 mb-2">
+            <div className="relative">
+              <div className="h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+              <div
+                className="absolute inset-0"
+                style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.15) 0%, transparent 70%)', height: '1px', filter: 'blur(3px)' }}
+              />
+            </div>
+          </div>
 
-      {/* Separador decorativo */}
-      <div className="max-w-3xl mx-auto px-4 mb-4">
-        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
-      </div>
+          <GachaPull
+            isPulling={isPulling}
+            isIdle={isIdle}
+            isRevealing={isRevealing}
+            result={result}
+            onPull={handlePull}
+            hasTickets={hasTickets}
+          />
+          <AnimatePresence>
+            {isRevealing && result && (
+              <PrizeReveal result={result} onClose={handleCloseReveal} />
+            )}
+          </AnimatePresence>
 
-      <Inventory inventory={inventory} stats={stats} onRedeem={handleRedeem} />
+          {/* Separador decorativo */}
+          <div className="max-w-3xl mx-auto px-4 mb-4">
+            <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+          </div>
+
+          <Inventory inventory={inventory} stats={stats} onRedeem={handleRedeem} />
+        </>
+      ) : (
+        <CalorieScanner />
+      )}
+
+      <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
     </div>
   );
 }
