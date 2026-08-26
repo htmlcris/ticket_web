@@ -1,9 +1,5 @@
 /**
- * PrizeCard.jsx — Card individual de un premio en el inventario.
- *
- * Muestra el emoji, nombre, descripción, rareza y fecha de obtención.
- * Si el premio NO ha sido cumplido, muestra un botón para marcarlo.
- * Si ya fue cumplido, muestra un badge verde.
+ * PrizeCard.jsx — Card individual de un premio como reliquia cósmica.
  */
 
 import { useState } from 'react';
@@ -29,68 +25,85 @@ export default function PrizeCard({ prize, index = 0, onRedeem }) {
 
   return (
     <motion.div
-      className={`glass-card glass-card-hover p-4 ${prize.redeemed ? 'border-green-500/30' : config.glow}`}
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      className={`glass-card glass-card-hover p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between ${
+        prize.redeemed ? 'border-emerald-500/30 bg-emerald-950/10' : config.glow
+      }`}
+      initial={{ opacity: 0, y: 20, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
       whileHover={{ scale: 1.02 }}
       layout
     >
-      <div className="flex items-start gap-3">
-        {/* Emoji */}
+      {/* Resplandor ambiental de la rareza */}
+      <div 
+        className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none opacity-20"
+        style={{
+          background: `radial-gradient(circle, ${config.colors.primary}, transparent 70%)`
+        }}
+      />
+
+      <div className="flex items-start gap-3.5 relative z-10">
+        
+        {/* Orbe del Emoji */}
         <div
-          className={`text-3xl sm:text-4xl flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center
-            ${prize.redeemed ? 'bg-green-500/10 border-green-500/30' : `${config.colors.bg} ${config.colors.border}`} border`}
+          className={`text-3xl sm:text-4xl flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border shadow-inner
+            ${prize.redeemed 
+              ? 'bg-emerald-500/10 border-emerald-500/30' 
+              : `${config.colors.bg} ${config.colors.border}`}`}
+          style={{
+            boxShadow: `0 0 15px ${config.colors.primary}25`
+          }}
         >
           {prize.emoji}
         </div>
 
-        {/* Info */}
+        {/* Detalles del premio */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <h3 className="font-display font-semibold text-white text-sm sm:text-base truncate">
+            <h3 className="font-display font-bold text-white text-base truncate">
               {prize.name}
             </h3>
             <RarityBadge rarity={prize.rarity} size="sm" showLabel={false} />
           </div>
 
-          <p className="text-slate-400 text-xs sm:text-sm line-clamp-2 mb-2">
+          <p className="text-slate-300/90 text-xs sm:text-sm line-clamp-2 mb-2 leading-relaxed">
             {prize.description}
           </p>
 
-          {/* Fecha de obtención */}
-          <p className="text-slate-500 text-xs mb-3">
-            Ganado: {wonDate.toLocaleDateString('es-ES', {
-              day: 'numeric', month: 'short', year: 'numeric',
+          {/* Fecha */}
+          <p className="text-slate-500 text-[11px] font-mono mb-3">
+            Obtenido: {wonDate.toLocaleDateString('es-ES', {
+              day: 'numeric', month: 'short',
               hour: '2-digit', minute: '2-digit',
             })}
           </p>
-
-          {/* Estado / Acción */}
-          {prize.redeemed ? (
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-green-400 text-xs font-bold">
-                ✅ ¡Ya lo cumplió!
-              </span>
-              {prize.redeemedAt && (
-                <span className="text-slate-500 text-xs">
-                  {new Date(prize.redeemedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                </span>
-              )}
-            </div>
-          ) : (
-            <motion.button
-              className="w-full py-2 rounded-xl text-xs font-bold text-white transition-all bg-gradient-to-r from-purple-600 to-pink-600"
-              style={{ boxShadow: '0 4px 15px rgba(168,85,247,0.35)' }}
-              onClick={handleRedeem}
-              disabled={redeeming}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              {redeeming ? '⏳ Guardando...' : '✅ Marcar como cumplido'}
-            </motion.button>
-          )}
         </div>
+      </div>
+
+      {/* Botón o Estado de cumplimiento */}
+      <div className="mt-2 pt-2 border-t border-white/5 relative z-10">
+        {prize.redeemed ? (
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-emerald-300 text-xs font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              <span>✨</span> ¡Premio Cumplido!
+            </span>
+            {prize.redeemedAt && (
+              <span className="text-slate-500 text-[11px] font-mono">
+                {new Date(prize.redeemedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+              </span>
+            )}
+          </div>
+        ) : (
+          <motion.button
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white tracking-wide uppercase transition-all bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 shadow-[0_4px_15px_rgba(192,38,211,0.35)]"
+            onClick={handleRedeem}
+            disabled={redeeming}
+            whileHover={{ scale: 1.02, boxShadow: '0 6px 20px rgba(192,38,211,0.5)' }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {redeeming ? '⏳ Registrando...' : '✅ Marcar como Cumplido'}
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );

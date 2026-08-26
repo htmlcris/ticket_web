@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ================================================================
-   GACHA CÓSMICO — Global Styles
-   Tema cósmico/espacial con nebulosas, estrellas y efectos glow.
+   GACHA CÓSMICO — Global Styles & Galaxy Universe Design System
+   Ambiente interestelar inmersivo con planetas, nebulosas y glassmorphism.
    ================================================================ */
 
 /* --- Base Reset & Typography --- */
@@ -16,114 +16,187 @@
   }
 
   body {
-    font-family: 'Outfit', system-ui, sans-serif;
-    background: #0a0a1a;
-    color: #f0f0ff;
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    background-color: #030014;
+    color: #f1f5f9;
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    selection-background-color: #c026d3;
+    selection-color: #ffffff;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
-  /* Custom scrollbar — cosmic theme */
+  /* Custom cosmic scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 7px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0a1a;
+    background: #030014;
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #a855f7, #ec4899);
-    border-radius: 3px;
+    background: linear-gradient(180deg, #d946ef 0%, #8b5cf6 50%, #06b6d4 100%);
+    border-radius: 9999px;
+    border: 2px solid #030014;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #f43f5e 0%, #d946ef 50%, #38bdf8 100%);
   }
 }
 
-/* --- Cosmic Background --- */
+/* --- Cosmic Components & Utilities --- */
 @layer components {
+  /* Fondo Galáctico Base con múltiples nebulosas */
   .bg-cosmic {
-    background: linear-gradient(160deg, #07071a 0%, #120922 35%, #0d0d28 65%, #07071a 100%);
+    background: radial-gradient(ellipse at 50% 0%, #170738 0%, #08021c 45%, #030014 100%);
     position: relative;
+    min-height: 100vh;
   }
 
   .bg-cosmic::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background:
-      radial-gradient(ellipse at 15% 40%, rgba(168, 85, 247, 0.12) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 15%, rgba(96, 165, 250, 0.09) 0%, transparent 50%),
-      radial-gradient(ellipse at 55% 85%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 55%, rgba(251, 191, 36, 0.04) 0%, transparent 40%);
+      radial-gradient(ellipse 60% 40% at 20% 30%, rgba(192, 38, 211, 0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 85% 20%, rgba(6, 182, 212, 0.14) 0%, transparent 65%),
+      radial-gradient(ellipse 70% 60% at 50% 85%, rgba(139, 92, 246, 0.13) 0%, transparent 70%),
+      radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* --- Glassmorphism Card --- */
+  /* Nebulosas pulsantes */
+  .nebula-glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+    animation: nebula-pulse 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes nebula-pulse {
+    0% { transform: scale(1) translate(0, 0); opacity: 0.45; }
+    50% { transform: scale(1.15) translate(20px, -15px); opacity: 0.7; }
+    100% { transform: scale(0.95) translate(-15px, 20px); opacity: 0.5; }
+  }
+
+  /* --- Glassmorphism de Lujo (Ultra-Refined) --- */
   .glass-card {
     background: linear-gradient(
-      145deg,
+      135deg,
       rgba(255, 255, 255, 0.07) 0%,
-      rgba(255, 255, 255, 0.025) 60%,
-      rgba(168, 85, 247, 0.04) 100%
+      rgba(255, 255, 255, 0.02) 60%,
+      rgba(147, 51, 234, 0.05) 100%
     );
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 1.1rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    position: relative;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    pointer-events: none;
   }
 
   .glass-card-hover {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .glass-card-hover:hover {
-    border-color: rgba(168, 85, 247, 0.35);
-    box-shadow: 0 12px 40px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    transform: translateY(-3px);
+    border-color: rgba(192, 38, 211, 0.45);
+    box-shadow: 0 15px 45px -5px rgba(147, 51, 234, 0.25), 0 0 25px rgba(6, 182, 212, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+    transform: translateY(-4px);
   }
 
-  /* --- Rarity Glow Effects --- */
+  /* --- Texto con Gradientes de Galaxia --- */
+  .text-galaxy {
+    background: linear-gradient(135deg, #ffffff 0%, #f0abfc 30%, #c084fc 65%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-aurora {
+    background: linear-gradient(135deg, #a7f3d0 0%, #38bdf8 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-gold-celestial {
+    background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-shimmer {
+    background: linear-gradient(
+      90deg,
+      #ffffff 0%,
+      #e879f9 25%,
+      #38bdf8 50%,
+      #fbbf24 75%,
+      #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* --- Rarezas con Brillo Dinámico --- */
   .glow-common {
-    box-shadow: 0 0 15px rgba(96, 165, 250, 0.3), 0 0 30px rgba(96, 165, 250, 0.1);
-    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.35), 0 0 45px rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.45);
   }
 
   .glow-rare {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.15);
-    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 25px rgba(192, 38, 211, 0.45), 0 0 55px rgba(147, 51, 234, 0.2);
+    border-color: rgba(217, 70, 239, 0.5);
   }
 
   .glow-legendary {
-    box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), 0 0 60px rgba(251, 191, 36, 0.2), 0 0 100px rgba(251, 191, 36, 0.1);
-    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 0 70px rgba(245, 158, 11, 0.3), 0 0 100px rgba(217, 70, 239, 0.2);
+    border-color: rgba(251, 191, 36, 0.7);
   }
 
-  /* --- Pull Button --- */
+  /* --- Botón Pull Galáctico (Hyper-Space Pulse) --- */
   .btn-pull {
     position: relative;
-    padding: 1rem 2.5rem;
+    padding: 1.1rem 2.8rem;
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-weight: 700;
-    font-size: 1.125rem;
-    letter-spacing: 0.02em;
+    font-size: 1.15rem;
+    letter-spacing: 0.03em;
     color: white;
     border: none;
     border-radius: 9999px;
     cursor: pointer;
-    background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #60a5fa 100%);
-    background-size: 200% 200%;
-    animation: gradient-shift 4s ease infinite;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 35%, #06b6d4 70%, #10b981 100%);
+    background-size: 300% 300%;
+    animation: gradient-shift 5s ease infinite;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset, 0 10px 30px -5px rgba(192, 38, 211, 0.5);
   }
 
   .btn-pull::before {
@@ -131,12 +204,12 @@
     position: absolute;
     inset: -3px;
     border-radius: 9999px;
-    background: linear-gradient(135deg, #ec4899, #a855f7, #60a5fa);
-    background-size: 200% 200%;
-    animation: gradient-shift 4s ease infinite;
+    background: linear-gradient(135deg, #f43f5e, #d946ef, #8b5cf6, #06b6d4);
+    background-size: 300% 300%;
+    animation: gradient-shift 5s ease infinite;
     z-index: -1;
-    filter: blur(18px);
-    opacity: 0.7;
+    filter: blur(14px);
+    opacity: 0.8;
   }
 
   .btn-pull::after {
@@ -146,161 +219,117 @@
     left: -100%;
     width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transform: skewX(-20deg);
-    animation: btn-shine 3s ease infinite;
+    animation: btn-shine 3.5s ease infinite;
   }
 
   .btn-pull:hover {
-    transform: scale(1.06);
-    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6), 0 0 80px rgba(236, 72, 153, 0.2);
+    transform: scale(1.06) translateY(-2px);
+    box-shadow: 0 0 45px rgba(217, 70, 239, 0.7), 0 0 90px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
   }
 
   .btn-pull:active {
-    transform: scale(0.97);
+    transform: scale(0.97) translateY(1px);
   }
 
   .btn-pull:disabled {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: not-allowed;
     transform: none;
     animation: none;
+    box-shadow: none;
   }
 
   @keyframes btn-shine {
     0% { left: -100%; }
-    30%, 100% { left: 150%; }
+    25%, 100% { left: 160%; }
   }
 
-  /* --- Shimmer Text --- */
-  .text-shimmer {
-    background: linear-gradient(
-      90deg,
-      #f0f0ff 0%,
-      #a855f7 25%,
-      #fbbf24 50%,
-      #a855f7 75%,
-      #f0f0ff 100%
-    );
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 3s linear infinite;
+  /* --- Planetas con Luz Atmosférica 3D --- */
+  .planet-glow-purple {
+    background: radial-gradient(circle at 30% 30%, #c084fc 0%, #7e22ce 50%, #3b0764 85%, #050014 100%);
+    box-shadow: -8px -8px 25px rgba(192, 132, 252, 0.4) inset, 0 0 35px rgba(168, 85, 247, 0.35);
   }
 
+  .planet-glow-cyan {
+    background: radial-gradient(circle at 30% 30%, #a5f3fc 0%, #0891b2 50%, #164e63 85%, #021a24 100%);
+    box-shadow: -6px -6px 20px rgba(165, 243, 252, 0.45) inset, 0 0 30px rgba(6, 182, 212, 0.4);
+  }
+
+  .planet-glow-gold {
+    background: radial-gradient(circle at 30% 30%, #fef08a 0%, #ca8a04 50%, #713f12 85%, #1c0c02 100%);
+    box-shadow: -8px -8px 25px rgba(254, 240, 138, 0.4) inset, 0 0 35px rgba(234, 179, 8, 0.35);
+  }
+
+  /* Anillo Planetario Estilizado */
+  .planet-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotateX(72deg) rotateY(-18deg);
+    border: 3px solid rgba(254, 240, 138, 0.6);
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.4), inset 0 0 15px rgba(217, 70, 239, 0.3);
+    pointer-events: none;
+  }
+
+  /* Estrellas fugaces */
+  .shooting-star {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(-45deg, rgba(255,255,255,1), rgba(6, 182, 212, 0.8), transparent);
+    border-radius: 999px;
+    filter: drop-shadow(0 0 6px #38bdf8);
+    animation: shooting-star-anim 6s ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes shooting-star-anim {
+    0% { transform: rotate(225deg) translateX(0); width: 0; opacity: 0; }
+    10% { width: 140px; opacity: 1; }
+    25% { transform: rotate(225deg) translateX(-450px); width: 0; opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* --- HUD & Scanner Reticle (Calorie Scanner) --- */
+  .hud-bracket {
+    position: relative;
+  }
+  .hud-bracket::before, .hud-bracket::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #06b6d4;
+    pointer-events: none;
+  }
+  .hud-bracket::before {
+    top: 0;
+    left: 0;
+    border-top: 2px solid;
+    border-left: 2px solid;
+  }
+  .hud-bracket::after {
+    bottom: 0;
+    right: 0;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+  }
+
+  /* Escáner láser con grid futurista */
+  .scanner-laser {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #34d399 20%, #6ee7b7 50%, #34d399 80%, transparent);
+    box-shadow: 0 0 15px #34d399, 0 0 30px #10b981;
+  }
 }
 
-
-/* --- Keyframe Animations --- */
+/* Keyframes globales */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-
-@keyframes screen-flash {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* ================================================================
-   ORB ANIMATIONS — GPU-accelerated (transform + opacity only)
-   Moved from JS setState to CSS for zero React re-renders.
-   ================================================================ */
-
-/* Orbe en estado idle — gradiente púrpura suave */
-.orb-idle {
-  background: radial-gradient(circle at 35% 35%,
-    rgba(168, 85, 247, 0.5),
-    rgba(168, 85, 247, 0.25) 50%,
-    rgba(168, 85, 247, 0.08) 70%,
-    transparent
-  );
-  border: 2px solid rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
-}
-
-/* Orbe durante pulling — ciclo de colores via CSS */
-.orb-cycling {
-  background: radial-gradient(circle at 35% 35%,
-    rgba(168, 85, 247, 0.6),
-    rgba(236, 72, 153, 0.3) 50%,
-    rgba(96, 165, 250, 0.1) 70%,
-    transparent
-  );
-  border: 2px solid rgba(168, 85, 247, 0.5);
-  animation: orb-color-cycle 0.8s ease-in-out infinite;
-  will-change: filter;
-}
-
-@keyframes orb-color-cycle {
-  0%   {
-    filter: drop-shadow(0 0 15px rgba(96, 165, 250, 0.6))
-            hue-rotate(0deg);
-  }
-  33%  {
-    filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.7))
-            hue-rotate(60deg);
-  }
-  66%  {
-    filter: drop-shadow(0 0 35px rgba(236, 72, 153, 0.7))
-            hue-rotate(120deg);
-  }
-  100% {
-    filter: drop-shadow(0 0 45px rgba(251, 191, 36, 0.8))
-            hue-rotate(180deg);
-  }
-}
-
-/* Anillo cónico del orbe */
-.orb-ring {
-  background: conic-gradient(from 0deg,
-    #ec4899, transparent, #a855f7, transparent, #60a5fa
-  );
-  mask: radial-gradient(circle, transparent 60%, black 62%);
-  -webkit-mask: radial-gradient(circle, transparent 60%, black 62%);
-}
-
-.orb-ring-spinning {
-  animation: spin 1s linear infinite;
-  will-change: transform;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Shake del orbe — CSS puro, sin setInterval */
-.orb-shake {
-  animation: orb-shake-anim 0.1s linear infinite;
-  will-change: transform;
-}
-
-@keyframes orb-shake-anim {
-  0%   { transform: translate(0, 0); }
-  25%  { transform: translate(-2px, 1px); }
-  50%  { transform: translate(2px, -1px); }
-  75%  { transform: translate(-1px, -2px); }
-  100% { transform: translate(1px, 2px); }
-}
-
-/* --- Particle Burst (for legendary reveals) --- */
-.particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* --- Screen flash overlay --- */
-.flash-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  animation: screen-flash 0.6s ease-out forwards;
-}
-

@@ -1,23 +1,10 @@
 /**
- * EvidenceModal.jsx — Modal para subir evidencia fotográfica.
- *
- * Permite seleccionar una foto, muestra preview,
- * comprime a thumbnail (~400px, JPEG 60%) para LocalStorage,
- * y confirma o cancela.
+ * EvidenceModal.jsx — Modal holográfico para subir evidencia de misiones cósmicas.
  */
 
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/**
- * Comprime una imagen a un thumbnail de max 400px, JPEG al 60%.
- * Retorna una promesa con el base64 resultante.
- *
- * @param {File} file - Archivo de imagen
- * @param {number} maxWidth - Ancho máximo en píxeles
- * @param {number} quality - Calidad JPEG (0-1)
- * @returns {Promise<string>} Base64 de la imagen comprimida
- */
 function compressImage(file, maxWidth = 400, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -27,7 +14,6 @@ function compressImage(file, maxWidth = 400, quality = 0.6) {
         const canvas = document.createElement('canvas');
         let { width, height } = img;
 
-        // Redimensionar manteniendo proporción
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
@@ -56,27 +42,21 @@ export default function EvidenceModal({ activity, isOpen, onConfirm, onCancel })
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
 
-  /**
-   * Maneja la selección de archivo: genera preview y comprime.
-   */
   const handleFileChange = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar que sea imagen
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona una imagen');
+      alert('Por favor selecciona una imagen válida');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Preview rápida (sin comprimir)
       const previewUrl = URL.createObjectURL(file);
       setPreview(previewUrl);
 
-      // Comprimir para almacenar
       const compressed = await compressImage(file);
       setCompressedBase64(compressed);
     } catch (error) {
@@ -87,21 +67,14 @@ export default function EvidenceModal({ activity, isOpen, onConfirm, onCancel })
     }
   }, []);
 
-  /**
-   * Confirma la evidencia y envía el base64 comprimido.
-   */
   const handleConfirm = useCallback(() => {
     if (compressedBase64) {
       onConfirm(compressedBase64);
-      // Reset state
       setPreview(null);
       setCompressedBase64(null);
     }
   }, [compressedBase64, onConfirm]);
 
-  /**
-   * Cancela y limpia el estado.
-   */
   const handleCancel = useCallback(() => {
     setPreview(null);
     setCompressedBase64(null);
@@ -119,61 +92,82 @@ export default function EvidenceModal({ activity, isOpen, onConfirm, onCancel })
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Backdrop */}
+        {/* Backdrop con blur */}
         <motion.div
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onClick={handleCancel}
         />
 
-        {/* Modal card */}
+        {/* Modal Card */}
         <motion.div
-          className="relative glass-card p-6 sm:p-8 max-w-sm w-full z-10"
-          style={{ borderColor: `${activity.color}30` }}
-          initial={{ scale: 0.8, opacity: 0, y: 30 }}
+          className="relative glass-card p-6 sm:p-8 max-w-md w-full z-10 border shadow-[0_15px_40px_rgba(0,0,0,0.8)]"
+          style={{ borderColor: `${activity.color}50` }}
+          initial={{ scale: 0.85, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 30 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          exit={{ scale: 0.85, opacity: 0, y: 30 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         >
           {/* Header */}
-          <div className="text-center mb-5">
-            <span className="text-4xl mb-2 block">{activity.emoji}</span>
-            <h3 className="font-display font-bold text-xl text-white mb-1">
+          <div className="text-center mb-6">
+            <div 
+              className="text-4xl w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 border shadow-inner"
+              style={{ 
+                backgroundColor: activity.colorLight,
+                borderColor: `${activity.color}40`,
+                boxShadow: `0 0 20px ${activity.color}30` 
+              }}
+            >
+              {activity.emoji}
+            </div>
+            
+            <h3 className="font-display font-extrabold text-2xl text-white tracking-tight">
               {activity.name}
             </h3>
-            <p className="text-slate-400 text-sm">
-              Sube una foto como evidencia para ganar 🎟️ +1 ticket
+            
+            <p className="text-slate-300/80 text-xs sm:text-sm mt-1">
+              Adjunta una foto como prueba para desbloquear <span className="text-amber-300 font-bold">🎟️ +1 Ticket</span>
             </p>
           </div>
 
-          {/* Preview de imagen */}
+          {/* Preview o Zona de Subida */}
           {preview ? (
             <motion.div
-              className="mb-5 rounded-xl overflow-hidden border border-white/10"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="mb-6 rounded-2xl overflow-hidden border border-white/20 relative shadow-lg"
+              initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <img
                 src={preview}
                 alt="Evidencia"
-                className="w-full h-48 object-cover"
+                className="w-full h-52 object-cover"
               />
+              <button
+                className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white/90 hover:text-white border border-white/20 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                📷 Cambiar foto
+              </button>
             </motion.div>
           ) : (
-            /* Zona de subida */
             <label
-              className="mb-5 flex flex-col items-center justify-center h-40 rounded-xl border-2 border-dashed border-white/15 hover:border-white/30 cursor-pointer transition-colors bg-white/[0.02]"
+              className="hud-bracket mb-6 flex flex-col items-center justify-center h-44 rounded-2xl border-2 border-dashed border-white/20 hover:border-white/40 cursor-pointer transition-all bg-black/30 hover:bg-white/[0.03] group"
               htmlFor="evidence-photo"
             >
-              <span className="text-3xl mb-2">📸</span>
-              <span className="text-slate-400 text-sm text-center px-4">
-                Toca para seleccionar una foto
+              <span className="text-4xl mb-2 group-hover:scale-110 transition-transform filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                📸
+              </span>
+              <span className="text-white text-sm font-semibold mb-0.5">
+                Tomar foto o seleccionar archivo
+              </span>
+              <span className="text-slate-400 text-xs font-mono">
+                CÁMARA / GALERÍA
               </span>
             </label>
           )}
 
-          {/* Input de archivo (oculto) */}
+          {/* Input oculto */}
           <input
             ref={fileInputRef}
             id="evidence-photo"
@@ -183,47 +177,37 @@ export default function EvidenceModal({ activity, isOpen, onConfirm, onCancel })
             className="hidden"
           />
 
-          {/* Botones */}
+          {/* Botones de acción */}
           <div className="flex gap-3">
             <button
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+              className="flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold border border-white/10 text-slate-300 hover:bg-white/5 transition-colors uppercase tracking-wider"
               onClick={handleCancel}
             >
               Cancelar
             </button>
 
             <motion.button
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold tracking-wider uppercase transition-all shadow-md ${
                 compressedBase64
-                  ? 'bg-gradient-to-r text-white shadow-lg'
-                  : 'bg-white/5 text-slate-500 cursor-not-allowed'
+                  ? 'bg-gradient-to-r text-white'
+                  : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/5'
               }`}
               style={
                 compressedBase64
                   ? {
-                      backgroundImage: `linear-gradient(135deg, ${activity.color}, ${activity.color}cc)`,
-                      boxShadow: `0 4px 20px ${activity.color}40`,
+                      backgroundImage: `linear-gradient(135deg, ${activity.color}, ${activity.color}bb)`,
+                      boxShadow: `0 4px 20px ${activity.color}50`,
                     }
                   : {}
               }
               disabled={!compressedBase64 || isProcessing}
               onClick={handleConfirm}
-              whileHover={compressedBase64 ? { scale: 1.03 } : {}}
-              whileTap={compressedBase64 ? { scale: 0.97 } : {}}
+              whileHover={compressedBase64 ? { scale: 1.02 } : {}}
+              whileTap={compressedBase64 ? { scale: 0.98 } : {}}
             >
-              {isProcessing ? '⏳ Procesando...' : '✅ Confirmar'}
+              {isProcessing ? '⏳ Procesando...' : '✨ Confirmar'}
             </motion.button>
           </div>
-
-          {/* Cambiar foto si ya hay preview */}
-          {preview && (
-            <button
-              className="w-full mt-3 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              📷 Cambiar foto
-            </button>
-          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

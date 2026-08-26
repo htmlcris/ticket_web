@@ -1,12 +1,12 @@
 /**
  * App.jsx — Componente raíz del Gacha Cósmico v2.
  *
- * Nuevo flujo: Actividades → Tickets → Ruleta → Inventario
- * Layout de scroll vertical en una sola vista.
+ * Flujo: Misiones Cósmicas → Tickets → Ruleta Portal → Bóveda de Premios
+ * Navegación integrada con Escáner Bio-Estelar.
  */
 
 import { useCallback, useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Components
 import StarField from './components/StarField';
@@ -32,10 +32,9 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Verificar si estamos en modo admin
     if (window.location.search.includes('admin=true')) {
       setIsAdmin(true);
-      return; // No necesitamos cargar el storageService normal si somos admin
+      return;
     }
 
     storageService.init().then(() => {
@@ -49,13 +48,38 @@ export default function App() {
 
   if (!isReady) {
     return (
-      <div className="bg-cosmic min-h-screen flex items-center justify-center flex-col relative">
+      <div className="bg-cosmic min-h-screen flex items-center justify-center flex-col relative overflow-hidden">
         <StarField count={80} />
-        <span className="text-5xl animate-bounce mb-6">🚀</span>
-        <h2 className="text-white font-display text-2xl font-bold animate-pulse">
-          Conectando con el universo...
-        </h2>
-        <p className="text-slate-400 mt-2 text-sm">Sincronizando base de datos global</p>
+        
+        <motion.div 
+          className="relative z-10 flex flex-col items-center text-center px-4"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* Orbe pulsante cósmico */}
+          <div className="relative w-24 h-24 mb-6">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-fuchsia-600 to-cyan-400 blur-xl opacity-60 animate-pulse" />
+            <div className="relative w-full h-full rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-4xl shadow-2xl">
+              🪐
+            </div>
+          </div>
+
+          <h2 className="text-white font-display text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+            Sincronizando con el Cosmos...
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm font-mono tracking-wider max-w-xs">
+            CONECTANDO A LA BÓVEDA ESTELAR GLOBAL
+          </p>
+
+          <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mt-6">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -105,7 +129,6 @@ function AppContent() {
     reset();
   }, [reset]);
 
-  // Marca un premio como cumplido llamando al API
   const handleRedeem = useCallback(async (pullId) => {
     try {
       const res = await fetch('/api/redeem', {
@@ -115,7 +138,6 @@ function AppContent() {
       });
       const result = await res.json();
       if (result.success) {
-        // Actualizar el prize en el inventario local (reemplaza el existente)
         updatePrize(result.prize);
       }
     } catch (err) {
@@ -124,16 +146,16 @@ function AppContent() {
   }, [updatePrize]);
 
   return (
-    <div className="bg-cosmic min-h-screen relative pb-20">
+    <div className="bg-cosmic min-h-screen relative pb-28">
       <StarField count={100} />
       
       {currentTab === 'gacha' ? (
         <>
           <Header tickets={tickets} />
 
-          {/* Separador decorativo */}
-          <div className="max-w-3xl mx-auto px-4 mb-2">
-            <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+          {/* Haz de luz cósmico divisor */}
+          <div className="max-w-4xl mx-auto px-4 mb-4">
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-fuchsia-500/40 to-transparent" />
           </div>
 
           <Activities
@@ -144,14 +166,20 @@ function AppContent() {
             exerciseWeekly={exerciseWeekly}
           />
 
-          {/* Separador decorativo con glow */}
-          <div className="max-w-3xl mx-auto px-4 mb-2">
-            <div className="relative">
-              <div className="h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+          {/* Divisor con aura central */}
+          <div className="max-w-4xl mx-auto px-4 my-4">
+            <div className="relative flex justify-center items-center">
+              <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/35 to-transparent" />
               <div
-                className="absolute inset-0"
-                style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.15) 0%, transparent 70%)', height: '1px', filter: 'blur(3px)' }}
+                className="absolute w-64 h-4 pointer-events-none"
+                style={{ 
+                  background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.2) 0%, transparent 70%)',
+                  filter: 'blur(6px)' 
+                }}
               />
+              <span className="absolute px-3 py-0.5 bg-[#08021c] border border-white/10 rounded-full text-[10px] font-mono text-cyan-300">
+                ✦ ✦ ✦
+              </span>
             </div>
           </div>
 
@@ -163,15 +191,16 @@ function AppContent() {
             onPull={handlePull}
             hasTickets={hasTickets}
           />
+          
           <AnimatePresence>
             {isRevealing && result && (
               <PrizeReveal result={result} onClose={handleCloseReveal} />
             )}
           </AnimatePresence>
 
-          {/* Separador decorativo */}
-          <div className="max-w-3xl mx-auto px-4 mb-4">
-            <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+          {/* Divisor hacia la colección */}
+          <div className="max-w-4xl mx-auto px-4 my-6">
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-purple-500/35 to-transparent" />
           </div>
 
           <Inventory inventory={inventory} stats={stats} onRedeem={handleRedeem} />
