@@ -1,19 +1,61 @@
 /**
  * CalorieScanner.jsx — Escáner Bio-Estelar de Calorías con IA de Google Gemini.
+ * Con compresión de imagen optimizada para dispositivos móviles y conexión robusta.
  */
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * Comprime la imagen del usuario (cámara o galería) para asegurar
+ * envíos ultrarrápidos y evitar límites de tamaño en el servidor.
+ */
+function compressImage(file, maxDimension = 1024, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      };
+      img.onerror = () => reject(new Error('No se pudo cargar la imagen seleccionada'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Error al leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CalorieScanner() {
   const [photoBase64, setPhotoBase64] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Procesar archivo seleccionado
-  const handleFileChange = (e) => {
+  // Procesar archivo seleccionado con compresión automática
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -22,13 +64,19 @@ export default function CalorieScanner() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setPhotoBase64(event.target.result);
-      setResult(null);
-      setError(null);
-    };
-    reader.readAsDataURL(file);
+    setIsCompressing(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const compressed = await compressImage(file, 1024, 0.8);
+      setPhotoBase64(compressed);
+    } catch (err) {
+      console.error('Error compressing image:', err);
+      setError('Error al procesar la imagen en el dispositivo.');
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   // Enviar a analizar con IA
@@ -45,16 +93,33 @@ export default function CalorieScanner() {
         body: JSON.stringify({ imageBase64: photoBase64 }),
       });
 
+      // Si el servidor devolvió un error HTTP
+      if (!res.ok) {
+        let errorMessage = `Error del servidor (${res.status})`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          if (res.status === 413) {
+            errorMessage = 'La imagen es demasiado pesada. Intenta con otra foto.';
+          } else if (res.status === 504 || res.status === 408) {
+            errorMessage = 'Tiempo de espera agotado. Por favor, reintenta.';
+          }
+        }
+        setError(errorMessage);
+        return;
+      }
+
       const data = await res.json();
 
-      if (data.success) {
+      if (data.success && data.data) {
         setResult(data.data);
       } else {
-        setError(data.error || 'No se pudo analizar la imagen.');
+        setError(data.error || 'No se pudo obtener el análisis nutricional.');
       }
     } catch (err) {
       console.error('Error analyzing image:', err);
-      setError('Hubo un error al conectar con el servidor cósmico.');
+      setError('Error de conexión con el servidor. Revisa tu conexión a internet o intenta nuevamente.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -102,16 +167,16 @@ export default function CalorieScanner() {
           {!photoBase64 ? (
             <div 
               className="hud-bracket border-2 border-dashed border-emerald-400/25 hover:border-emerald-400/60 rounded-3xl p-10 sm:p-14 text-center cursor-pointer bg-black/30 hover:bg-emerald-950/20 transition-all duration-300 group"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isCompressing && fileInputRef.current?.click()}
             >
               <div className="text-5xl sm:text-6xl mb-3 group-hover:scale-110 transition-transform filter drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                 📸
               </div>
               <p className="text-white font-bold text-base sm:text-lg mb-1">
-                Toca para capturar o subir tu platillo
+                {isCompressing ? 'Optimizando foto...' : 'Toca para capturar o subir tu platillo'}
               </p>
               <p className="text-slate-400 text-xs font-mono">
-                CÁMARA O GALERÍA DISPONIBLE
+                {isCompressing ? 'PROCESANDO...' : 'CÁMARA O GALERÍA DISPONIBLE'}
               </p>
             </div>
           ) : (
@@ -181,6 +246,7 @@ export default function CalorieScanner() {
             <motion.button
               className="w-full py-4 rounded-2xl text-base sm:text-lg font-bold text-white tracking-wide uppercase bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 shadow-[0_6px_25px_rgba(16,185,129,0.35)]"
               onClick={handleAnalyze}
+              disabled={isCompressing}
               whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(16,185,129,0.5)' }}
               whileTap={{ scale: 0.98 }}
             >
