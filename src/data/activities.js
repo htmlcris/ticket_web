@@ -29,12 +29,12 @@ const activities = [
   {
     id: 'skincare-morning',
     name: 'Skincare Matutina',
-    description: 'Rutina de día (antes de las 12 PM)',
+    description: 'Rutina de día (antes de la 1:00 PM)',
     emoji: '☀️',
     color: '#a78bfa',
     colorLight: '#a78bfa20',
     gradient: 'from-violet-400 to-purple-400',
-    deadline: { hour: 12, minute: 0 } // 12:00 PM Ecuador time
+    deadline: { hour: 13, minute: 0 } // 1:00 PM Ecuador time
   },
   {
     id: 'skincare-night',
