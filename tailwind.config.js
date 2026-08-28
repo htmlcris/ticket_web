@@ -7,32 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        galaxy: {
-          void: '#030014',
-          abyss: '#080420',
-          deep: '#0f072e',
-          indigo: '#180c45',
-          purple: '#28136b',
+        void: {
+          950: '#000000',
+          900: '#050201',
+          800: '#0a0503',
+          700: '#140905',
+          600: '#1f0d07',
+          500: '#2d140a',
         },
-        cosmos: {
-          950: '#030014',
-          900: '#080420',
-          800: '#0e0728',
-          700: '#180b3d',
-          600: '#251259',
-          500: '#3b1c8a',
-        },
-        stellar: {
-          blue: '#38bdf8',
-          cyan: '#06b6d4',
-          teal: '#14b8a6',
-          purple: '#a855f7',
-          violet: '#8b5cf6',
-          magenta: '#d946ef',
-          pink: '#ec4899',
-          rose: '#f43f5e',
-          gold: '#fbbf24',
+        accretion: {
+          fire: '#ff6b00',
+          orange: '#f97316',
           amber: '#f59e0b',
+          gold: '#fbbf24',
+          sun: '#fef08a',
+          crimson: '#dc2626',
+          violet: '#9333ea',
         },
       },
       fontFamily: {
@@ -40,57 +30,39 @@ export default {
         body: ['"Outfit"', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'spin-slow': 'spin 20s linear infinite',
-        'spin-reverse-slow': 'spin-reverse 25s linear infinite',
-        'float-slow': 'float 8s ease-in-out infinite',
-        'float-medium': 'float 5s ease-in-out infinite alternate',
-        'float-fast': 'float 3.5s ease-in-out infinite alternate',
-        'planet-orbit': 'orbit 40s linear infinite',
-        'glow-pulse': 'glow 3s ease-in-out infinite alternate',
-        'twinkle-slow': 'twinkle 4s ease-in-out infinite',
-        'twinkle-fast': 'twinkle 2s ease-in-out infinite alternate',
-        'shimmer': 'shimmer 3s linear infinite',
-        'meteor': 'meteor 6s linear infinite',
+        'accretion-spin': 'accretionSpin 24s linear infinite',
+        'accretion-spin-reverse': 'accretionSpinRev 30s linear infinite',
+        'photon-pulse': 'photonPulse 3s ease-in-out infinite alternate',
+        'gravity-wave': 'gravityWave 6s ease-in-out infinite alternate',
+        'shimmer': 'shimmer 3.5s linear infinite',
       },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-          '50%': { transform: 'translateY(-14px) rotate(1.5deg)' },
+        accretionSpin: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
         },
-        'spin-reverse': {
+        accretionSpinRev: {
           from: { transform: 'rotate(360deg)' },
           to: { transform: 'rotate(0deg)' },
         },
-        glow: {
-          '0%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.35), 0 0 40px rgba(6, 182, 212, 0.2)' },
-          '100%': { boxShadow: '0 0 35px rgba(217, 70, 239, 0.6), 0 0 70px rgba(168, 85, 247, 0.4), 0 0 100px rgba(6, 182, 212, 0.25)' },
+        photonPulse: {
+          '0%': { opacity: '0.4', transform: 'scale(0.98)' },
+          '100%': { opacity: '0.85', transform: 'scale(1.03)' },
         },
-        twinkle: {
-          '0%, 100%': { opacity: '0.2', transform: 'scale(0.8)' },
-          '50%': { opacity: '1', transform: 'scale(1.25)' },
+        gravityWave: {
+          '0%': { transform: 'scale(1) translate3d(0,0,0)' },
+          '100%': { transform: 'scale(1.04) translate3d(0, -6px, 0)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
-        meteor: {
-          '0%': { transform: 'rotate(215deg) translateX(0)', opacity: '1' },
-          '70%': { opacity: '1' },
-          '100%': { transform: 'rotate(215deg) translateX(-600px)', opacity: '0' },
-        },
       },
       boxShadow: {
-        'glow-cyan': '0 0 25px rgba(6, 182, 212, 0.4), 0 0 50px rgba(6, 182, 212, 0.15)',
-        'glow-purple': '0 0 25px rgba(168, 85, 247, 0.45), 0 0 60px rgba(168, 85, 247, 0.2)',
-        'glow-magenta': '0 0 25px rgba(217, 70, 239, 0.45), 0 0 60px rgba(217, 70, 239, 0.2)',
-        'glow-gold': '0 0 25px rgba(251, 191, 36, 0.5), 0 0 70px rgba(251, 191, 36, 0.25)',
-        'glow-emerald': '0 0 25px rgba(16, 185, 129, 0.45), 0 0 60px rgba(16, 185, 129, 0.2)',
-        'glass-luxury': '0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
-      },
-      backgroundImage: {
-        'gradient-galaxy': 'radial-gradient(ellipse at 50% 0%, #1a083a 0%, #08031d 50%, #030014 100%)',
-        'gradient-card-cosmic': 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 50%, rgba(168,85,247,0.05) 100%)',
+        'glow-accretion': '0 0 25px rgba(249, 115, 22, 0.45), 0 0 60px rgba(251, 191, 36, 0.2)',
+        'glow-photon': '0 0 30px rgba(251, 191, 36, 0.5), 0 0 70px rgba(249, 115, 22, 0.25)',
+        'glow-void': '0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(0, 0, 0, 0.95)',
+        'card-obsidian': '0 8px 30px -5px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(251, 191, 36, 0.15)',
       },
     },
   },

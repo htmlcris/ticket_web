@@ -1,7 +1,7 @@
 /**
- * App.jsx — Componente raíz del Gacha Cósmico v2.
+ * App.jsx — Componente raíz del Gacha Cósmico (Edición Singularidad & Agujero Negro).
  *
- * Flujo: Misiones Cósmicas → Tickets → Ruleta Portal → Bóveda de Premios
+ * Flujo: Misiones Diarias → Tickets → Ruleta Singularidad → Bóveda de Premios
  * Navegación integrada con Escáner Bio-Estelar.
  */
 
@@ -48,8 +48,8 @@ export default function App() {
 
   if (!isReady) {
     return (
-      <div className="bg-cosmic min-h-screen flex items-center justify-center flex-col relative overflow-hidden">
-        <StarField count={80} />
+      <div className="bg-black min-h-screen flex items-center justify-center flex-col relative overflow-hidden">
+        <StarField count={60} />
         
         <motion.div 
           className="relative z-10 flex flex-col items-center text-center px-4"
@@ -57,24 +57,24 @@ export default function App() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Orbe pulsante cósmico */}
+          {/* Orbe pulsante del Agujero Negro */}
           <div className="relative w-24 h-24 mb-6">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-fuchsia-600 to-cyan-400 blur-xl opacity-60 animate-pulse" />
-            <div className="relative w-full h-full rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-4xl shadow-2xl">
-              🪐
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-600 to-amber-400 blur-xl opacity-70 animate-pulse" />
+            <div className="relative w-full h-full rounded-full bg-black border border-amber-400/50 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(249,115,22,0.8)]">
+              🕳️
             </div>
           </div>
 
           <h2 className="text-white font-display text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
-            Sincronizando con el Cosmos...
+            Entrando al Horizonte de Sucesos...
           </h2>
-          <p className="text-slate-400 text-xs sm:text-sm font-mono tracking-wider max-w-xs">
-            CONECTANDO A LA BÓVEDA ESTELAR GLOBAL
+          <p className="text-amber-200/80 text-xs sm:text-sm font-mono tracking-wider max-w-xs uppercase">
+            Sincronizando Bóveda de Singularidad
           </p>
 
           <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mt-6">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300"
+              className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200"
               animate={{ x: ['-100%', '100%'] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
             />
@@ -147,15 +147,15 @@ function AppContent() {
 
   return (
     <div className="bg-cosmic min-h-screen relative pb-28">
-      <StarField count={100} />
+      <StarField count={70} />
       
       {currentTab === 'gacha' ? (
         <>
           <Header tickets={tickets} />
 
-          {/* Haz de luz cósmico divisor */}
+          {/* Divisor de haz de fotones */}
           <div className="max-w-4xl mx-auto px-4 mb-4">
-            <div className="h-[1px] bg-gradient-to-r from-transparent via-fuchsia-500/40 to-transparent" />
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
           </div>
 
           <Activities
@@ -166,18 +166,18 @@ function AppContent() {
             exerciseWeekly={exerciseWeekly}
           />
 
-          {/* Divisor con aura central */}
+          {/* Divisor central con orbe de singularidad */}
           <div className="max-w-4xl mx-auto px-4 my-4">
             <div className="relative flex justify-center items-center">
-              <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/35 to-transparent" />
+              <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
               <div
                 className="absolute w-64 h-4 pointer-events-none"
                 style={{ 
-                  background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.2) 0%, transparent 70%)',
+                  background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.25) 0%, transparent 70%)',
                   filter: 'blur(6px)' 
                 }}
               />
-              <span className="absolute px-3 py-0.5 bg-[#08021c] border border-white/10 rounded-full text-[10px] font-mono text-cyan-300">
+              <span className="absolute px-3 py-0.5 bg-black border border-amber-500/30 rounded-full text-[10px] font-mono text-amber-300 shadow-[0_0_10px_rgba(249,115,22,0.3)]">
                 ✦ ✦ ✦
               </span>
             </div>
@@ -200,7 +200,7 @@ function AppContent() {
 
           {/* Divisor hacia la colección */}
           <div className="max-w-4xl mx-auto px-4 my-6">
-            <div className="h-[1px] bg-gradient-to-r from-transparent via-purple-500/35 to-transparent" />
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-amber-500/35 to-transparent" />
           </div>
 
           <Inventory inventory={inventory} stats={stats} onRedeem={handleRedeem} />
